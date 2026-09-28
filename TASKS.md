@@ -6,8 +6,8 @@
 ### Phase Status Summary
 | Phase / Slice | Description | Status |
 | :--- | :--- | :--- |
-| **Slice 1** | Foundation Scaffolding & Multi-Container Docker Orchestration | 🟡 IN PROGRESS |
-| **Slice 2** | Database Schema, Prisma Migrations & Seed Data | ⚪ BACKLOG |
+| **Slice 1** | Foundation Scaffolding & Multi-Container Docker Orchestration | 🟢 COMPLETED |
+| **Slice 2** | Database Schema, Prisma Migrations & Seed Data | 🟢 COMPLETED |
 | **Slice 3** | Core Domain Business Logic & Unit Test Suite | ⚪ BACKLOG |
 | **Slice 4** | M-Pesa Daraja Engine (STK Push, Webhook, Idempotency, Ledger) | ⚪ BACKLOG |
 | **Slice 5** | FreeRADIUS (rlm_sql) & MikroTik RouterOS Gateway Controller | ⚪ BACKLOG |
@@ -21,31 +21,32 @@
 
 ### Detailed Vertical Slices & Acceptance Criteria
 
-#### [ ] Slice 1: Foundation Scaffolding & Multi-Container Docker Orchestration
+#### [x] Slice 1: Foundation Scaffolding & Multi-Container Docker Orchestration
 * [x] Initialize Git repository with `main` branch.
 * [x] Draft core system documentation (`PRD.md`, `ARCHITECTURE.md`, `RULES.md`, `DESIGN.md`, `TASKS.md`, `MEMORY.md`).
-* [ ] Create project root structure (`apps/api`, `apps/portal`, `apps/admin`, `packages/shared`, `infrastructure/docker`).
-* [ ] Configure root `package.json`, TypeScript configs (`tsconfig.base.json`), and tooling.
-* [ ] Build `docker-compose.yml` for multi-service stack:
-  - `postgres`: PostgreSQL 16 with health check.
+* [x] Create project root structure (`apps/api`, `apps/portal`, `apps/admin`, `packages/shared`, `infrastructure/docker`).
+* [x] Configure root `package.json`, TypeScript configs (`tsconfig.base.json`), and tooling.
+* [x] Build `docker-compose.yml` for multi-service stack:
+  - `postgres`: PostgreSQL 15/16 with health check.
   - `redis`: Redis 7 Alpine with persistence.
   - `freeradius`: FreeRADIUS 3.x with PostgreSQL dictionary and `rlm_sql`.
   - `api`: Node.js / Fastify backend service.
   - `portal`: Captive Portal web frontend.
+  - `admin`: Admin Management Platform frontend.
   - `nginx`: Reverse proxy with SSL & walled-garden forwarding.
-* [ ] Generate comprehensive `.env.example` documenting all configuration keys.
+* [x] Generate comprehensive `.env.example` documenting all configuration keys.
 * *Acceptance Criteria*: Docker Compose builds without errors; environment variables validated; core directories created.
 
-#### [ ] Slice 2: Database Schema, Prisma Migrations & Seed Data
-* [ ] Implement complete Prisma schema in `packages/database`:
+#### [x] Slice 2: Database Schema, Prisma Migrations & Seed Data
+* [x] Implement complete Prisma schema in `packages/database`:
   - `User`, `Role`, `Permission`, `AuditLog`
   - `Location`, `Router`, `AccessPoint`
   - `Plan`, `Customer`, `Device`
   - `Payment`, `Transaction`, `Entitlement`
   - `VoucherBatch`, `Voucher`, `Session`
   - FreeRADIUS native tables: `nas`, `radcheck`, `radreply`, `radacct`
-* [ ] Create SQL migration files ensuring indexes, foreign keys, and unique constraints.
-* [ ] Create idempotent database seed script (`prisma/seed.ts`):
+* [x] Create SQL migration files ensuring indexes, foreign keys, and unique constraints.
+* [x] Create idempotent database seed script (`prisma/seed.ts`):
   - Superadmin account (Argon2id password)
   - Default Location ("Main Campus / HQ")
   - Default Bandwidth Plans (1 Hour, 24 Hours, 7 Days, 5GB Capped)

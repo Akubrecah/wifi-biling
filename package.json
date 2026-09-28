@@ -1,0 +1,28 @@
+{
+  "name": "wifi-billing-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Carrier-grade WiFi billing and hotspot management system",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace=@wifi-billing/api run dev",
+    "dev:portal": "npm --workspace=@wifi-billing/portal run dev",
+    "dev:admin": "npm --workspace=@wifi-billing/admin run dev",
+    "build": "npm run --workspaces --if-present build",
+    "test": "npm run --workspaces --if-present test",
+    "typecheck": "npm run --workspaces --if-present typecheck",
+    "db:generate": "npm --workspace=@wifi-billing/database run generate",
+    "db:migrate": "npm --workspace=@wifi-billing/database run migrate",
+    "db:seed": "npm --workspace=@wifi-billing/database run seed"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

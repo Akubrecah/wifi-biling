@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: wifi_billing_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-wifibilling}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wifibilling_secure_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-wifi_billing_db}
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/01-freeradius-schema.sql:/docker-entrypoint-initdb.d/01-freeradius-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wifibilling} -d ${POSTGRES_DB:-wifi_billing_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wifi_internal_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: wifi_billing_redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6381}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wifi_internal_net
+
+  freeradius:
+    build:
+      context: ./infrastructure/docker/freeradius
+    container_name: wifi_billing_freeradius
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "1812:1812/udp" # RADIUS Authentication
+      - "1813:1813/udp" # RADIUS Accounting
+      - "3799:3799/udp" # RADIUS CoA / Disconnect-Request
+    networks:
+      - wifi_internal_net
+      - default
+
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    container_name: wifi_billing_api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-wifibilling}:${POSTGRES_PASSWORD:-wifibilling_secure_pass}@postgres:5432/${POSTGRES_DB:-wifi_billing_db}?schema=public
+      REDIS_URL: redis://redis:6379
+      API_PORT: 3001
+      API_HOST: 0.0.0.0
+      APP_SECRET_KEY: ${APP_SECRET_KEY}
+      MPESA_ENVIRONMENT: ${MPESA_ENVIRONMENT:-sandbox}
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET}
+      MPESA_PASSKEY: ${MPESA_PASSKEY}
+      MPESA_SHORTCODE: ${MPESA_SHORTCODE}
+      MPESA_CALLBACK_URL: ${MPESA_CALLBACK_URL}
+      RADIUS_SECRET: ${RADIUS_SECRET:-testing123_production_radius_secret}
+      MIKROTIK_HOST: ${MIKROTIK_HOST}
+      MIKROTIK_API_PORT: ${MIKROTIK_API_PORT:-8729}
+      MIKROTIK_USERNAME: ${MIKROTIK_USERNAME}
+      MIKROTIK_PASSWORD: ${MIKROTIK_PASSWORD}
+    networks:
+      - wifi_internal_net
+
+  portal:
+    build:
+      context: .
+      dockerfile: ./apps/portal/Dockerfile
+    container_name: wifi_billing_portal
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORTAL_PORT: 3000
+      PORTAL_HOST: 0.0.0.0
+    ports:
+      - "${PORTAL_PORT:-3000}:3000"
+    networks:
+      - wifi_internal_net
+
+  admin:
+    build:
+      context: .
+      dockerfile: ./apps/admin/Dockerfile
+    container_name: wifi_billing_admin
+    restart: always
+    environment:
+      NODE_ENV: production
+      ADMIN_PORT: 3002
+      ADMIN_HOST: 0.0.0.0
+    ports:
+      - "${ADMIN_PORT:-3002}:3002"
+    networks:
+      - wifi_internal_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: wifi_billing_nginx
+    restart: always
+    depends_on:
+      - api
+      - portal
+      - admin
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - wifi_internal_net
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+networks:
+  wifi_internal_net:
+    driver: bridge

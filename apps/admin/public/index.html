@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | WiFi Billing Platform</title>
+  <style>
+    :root {
+      --bg: #0F172A;
+      --sidebar: #1E293B;
+      --card: #1E293B;
+      --card-border: #334155;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --primary: #10B981;
+      --accent: #38BDF8;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      padding: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand-icon {
+      width: 24px;
+      height: 24px;
+      fill: var(--primary);
+    }
+
+    .nav-links {
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .nav-item {
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--primary);
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    header {
+      height: 64px;
+      background: var(--sidebar);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .user-pill {
+      font-size: 13px;
+      background: #334155;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      color: var(--text);
+    }
+
+    .content {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Metric Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .metric-trend {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Data Tables */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.15);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      color: var(--text);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-online {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--primary);
+    }
+
+    .btn-kick {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-kick:hover {
+      background: var(--danger);
+      color: #FFFFFF;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24">
+        <path d="M12 3c-4.97 0-9.45 2.02-12.7 5.29l1.41 1.41C3.35 7.06 7.42 5.2 12 5.2s8.65 1.86 11.29 4.5l1.41-1.41C21.45 5.02 16.97 3 12 3zm0 4.8c-3.65 0-6.94 1.48-9.33 3.88l1.41 1.41C5.83 11.35 8.73 10 12 10s6.17 1.35 7.92 3.09l1.41-1.41C18.94 9.28 15.65 7.8 12 7.8zm0 4.8c-2.32 0-4.42.94-5.95 2.47l1.41 1.41C8.51 15.43 10.15 14.6 12 14.6s3.49.83 4.54 1.88l1.41-1.41C16.42 13.54 14.32 12.6 12 12.6zm0 4.8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+      </svg>
+      FastNet Admin
+    </div>
+    <nav class="nav-links">
+      <div class="nav-item active">Overview Dashboard</div>
+      <div class="nav-item">Router Gateways</div>
+      <div class="nav-item">Internet Plans</div>
+      <div class="nav-item">Live Sessions</div>
+      <div class="nav-item">Voucher Studio</div>
+      <div class="nav-item">Financial Ledger</div>
+      <div class="nav-item">Audit Logs</div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header>
+      <div><strong>HQ Hotspot Management</strong></div>
+      <div class="user-pill">superadmin@wifibilling.local</div>
+    </header>
+
+    <div class="content">
+      <!-- Top Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title">Today's Revenue</div>
+          <div class="metric-value">KES 18,450</div>
+          <div class="metric-trend">+14% vs yesterday</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Active Devices</div>
+          <div class="metric-value">142</div>
+          <div class="metric-trend">98% satisfaction</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Online Routers</div>
+          <div class="metric-value">1 / 1</div>
+          <div class="metric-trend">MT-E7161B-01</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Vouchers Claimed</div>
+          <div class="metric-value">48</div>
+          <div class="metric-trend">KES 3,200 value</div>
+        </div>
+      </div>
+
+      <!-- Router Fleet Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Router Fleet Status</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Router Name</th>
+              <th>NAS Identifier</th>
+              <th>IP Address</th>
+              <th>Active Clients</th>
+              <th>Heartbeat</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>MikroTik-E7161B Gateway</td>
+              <td><code>MT-E7161B-01</code></td>
+              <td>192.168.88.1</td>
+              <td>142 clients</td>
+              <td>Just now</td>
+              <td><span class="status-badge status-online">Online</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Live Connected Sessions Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Active Sessions</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Client IP</th>
+              <th>MAC Address</th>
+              <th>Plan</th>
+              <th>Traffic (DL / UL)</th>
+              <th>Connected Duration</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>192.168.88.24</td>
+              <td><code>D8:5E:D3:1A:4C:80</code></td>
+              <td>24 Hours Pass</td>
+              <td>420 MB / 85 MB</td>
+              <td>2h 15m</td>
+              <td><button class="btn-kick" onclick="alert('Disconnect-Request (PoD) sent to MikroTik port 3799')">Disconnect</button></td>
+            </tr>
+            <tr>
+              <td>192.168.88.31</td>
+              <td><code>7C:B2:7D:99:E1:02</code></td>
+              <td>5GB Data Pass</td>
+              <td>1.8 GB / 210 MB</td>
+              <td>5h 42m</td>
+              <td><button class="btn-kick" onclick="alert('Disconnect-Request (PoD) sent to MikroTik port 3799')">Disconnect</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

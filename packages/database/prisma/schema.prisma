@@ -1,0 +1,421 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  OPERATOR
+  ACCOUNTANT
+  NETWORK_ENGINEER
+  READ_ONLY
+}
+
+enum PlanType {
+  TIME_BASED
+  DATA_BASED
+  HYBRID
+  UNLIMITED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+  TIMEOUT
+  REVERSED
+}
+
+enum PaymentProvider {
+  MPESA_DARAJA
+  VOUCHER
+  MANUAL_OVERRIDE
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  REVERSAL
+  ADJUSTMENT
+}
+
+enum EntitlementStatus {
+  PENDING
+  ACTIVE
+  DEPLETED
+  EXPIRED
+  REVOKED
+}
+
+enum SessionStatus {
+  ONLINE
+  IDLE
+  EXPIRED
+  DISCONNECTED
+  BLOCKED
+}
+
+enum VoucherStatus {
+  AVAILABLE
+  RESERVED
+  USED
+  EXPIRED
+  DISABLED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  name         String
+  role         UserRole      @default(OPERATOR)
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  batches      VoucherBatch[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Location {
+  id           String         @id @default(uuid())
+  name         String
+  slug         String         @unique
+  description  String?
+  address      String?
+  contactPhone String?        @map("contact_phone")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  routers      Router[]
+  plans        Plan[]
+  batches      VoucherBatch[]
+
+  @@map("locations")
+}
+
+model Router {
+  id            String    @id @default(uuid())
+  locationId    String    @map("location_id")
+  name          String
+  nasIdentifier String    @unique @map("nas_identifier")
+  ipAddress     String    @map("ip_address")
+  radiusSecret  String    @map("radius_secret")
+  apiPort       Int       @default(8729) @map("api_port")
+  apiUsername   String?   @map("api_username")
+  apiPassword   String?   @map("api_password")
+  isActive      Boolean   @default(true) @map("is_active")
+  lastHeartbeat DateTime? @map("last_heartbeat")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  location Location  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  sessions Session[]
+
+  @@map("routers")
+}
+
+model Plan {
+  id             String        @id @default(uuid())
+  name           String
+  description    String?
+  price          Decimal       @db.Decimal(10, 2)
+  currency       String        @default("KES")
+  planType       PlanType      @default(TIME_BASED) @map("plan_type")
+  durationSec    Int?          @map("duration_sec")
+  dataLimitBytes BigInt?       @map("data_limit_bytes")
+  downloadSpeed  Int           @map("download_speed") // kbps
+  uploadSpeed    Int           @map("upload_speed")   // kbps
+  burstDown      Int?          @map("burst_down")     // kbps
+  burstUp        Int?          @map("burst_up")       // kbps
+  burstThreshold Int?          @map("burst_threshold")
+  burstDuration  Int?          @map("burst_duration")
+  maxDevices     Int           @default(1) @map("max_devices")
+  isActive       Boolean       @default(true) @map("is_active")
+  locationId     String?       @map("location_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  location     Location?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  payments     Payment[]
+  entitlements Entitlement[]
+  vouchers     Voucher[]
+  batches      VoucherBatch[]
+
+  @@map("plans")
+}
+
+model Customer {
+  id          String        @id @default(uuid())
+  phoneNumber String        @map("phone_number")
+  name        String?
+  email       String?
+  isGuest     Boolean       @default(true) @map("is_guest")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  devices      Device[]
+  payments     Payment[]
+  entitlements Entitlement[]
+  vouchers     Voucher[]
+
+  @@index([phoneNumber])
+  @@map("customers")
+}
+
+model Device {
+  id           String        @id @default(uuid())
+  customerId   String?       @map("customer_id")
+  macAddress   String        @map("mac_address")
+  isRandomized Boolean       @default(false) @map("is_randomized")
+  hostname     String?
+  firstSeen    DateTime      @default(now()) @map("first_seen")
+  lastSeen     DateTime      @default(now()) @map("last_seen")
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  payments Payment[]
+  sessions Session[]
+
+  @@index([macAddress])
+  @@map("devices")
+}
+
+model Payment {
+  id             String          @id @default(uuid())
+  customerId     String          @map("customer_id")
+  planId         String          @map("plan_id")
+  deviceId       String          @map("device_id")
+  amount         Decimal         @db.Decimal(10, 2)
+  currency       String          @default("KES")
+  provider       PaymentProvider @default(MPESA_DARAJA)
+  status         PaymentStatus   @default(CREATED)
+  merchantReqId  String?         @map("merchant_req_id")
+  checkoutReqId  String?         @unique @map("checkout_req_id")
+  providerRef    String?         @map("provider_ref")
+  phoneNumber    String          @map("phone_number")
+  idempotencyKey String          @unique @map("idempotency_key")
+  failureReason  String?         @map("failure_reason")
+  rawCallback    Json?           @map("raw_callback")
+  settledAt      DateTime?       @map("settled_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  plan         Plan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  device       Device        @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  transaction  Transaction?
+  entitlements Entitlement[]
+
+  @@index([phoneNumber])
+  @@index([providerRef])
+  @@map("payments")
+}
+
+model Transaction {
+  id            String          @id @default(uuid())
+  paymentId     String          @unique @map("payment_id")
+  referenceCode String          @map("reference_code")
+  amount        Decimal         @db.Decimal(10, 2)
+  currency      String          @default("KES")
+  type          TransactionType @default(CHARGE)
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([referenceCode])
+  @@map("transactions")
+}
+
+model Entitlement {
+  id         String            @id @default(uuid())
+  customerId String            @map("customer_id")
+  planId     String            @map("plan_id")
+  paymentId  String?           @map("payment_id")
+  voucherId  String?           @unique @map("voucher_id")
+  status     EntitlementStatus @default(PENDING)
+  startsAt   DateTime?         @map("starts_at")
+  expiresAt  DateTime?         @map("expires_at")
+  totalBytes BigInt?           @map("total_bytes")
+  usedBytes  BigInt            @default(0) @map("used_bytes")
+  maxDevices Int               @default(1) @map("max_devices")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payment  Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  voucher  Voucher?  @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  sessions Session[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("entitlements")
+}
+
+model Session {
+  id             String        @id @default(uuid())
+  entitlementId  String        @map("entitlement_id")
+  deviceId       String        @map("device_id")
+  routerId       String        @map("router_id")
+  radAcctId      BigInt?       @map("rad_acct_id")
+  framedIp       String?       @map("framed_ip")
+  macAddress     String        @map("mac_address")
+  startedAt      DateTime      @default(now()) @map("started_at")
+  lastInterim    DateTime      @default(now()) @map("last_interim")
+  stoppedAt      DateTime?     @map("stopped_at")
+  bytesIn        BigInt        @default(0) @map("bytes_in")
+  bytesOut       BigInt        @default(0) @map("bytes_out")
+  terminateCause String?       @map("terminate_cause")
+  status         SessionStatus @default(ONLINE)
+
+  entitlement Entitlement @relation(fields: [entitlementId], references: [id], onDelete: Restrict)
+  device      Device      @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  router      Router      @relation(fields: [routerId], references: [id], onDelete: Restrict)
+
+  @@index([macAddress])
+  @@index([status])
+  @@map("sessions")
+}
+
+model VoucherBatch {
+  id         String   @id @default(uuid())
+  name       String
+  planId     String   @map("plan_id")
+  locationId String?  @map("location_id")
+  quantity   Int
+  createdBy  String   @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  user     User      @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  vouchers Voucher[]
+
+  @@map("voucher_batches")
+}
+
+model Voucher {
+  id          String        @id @default(uuid())
+  batchId     String?       @map("batch_id")
+  code        String        @unique
+  planId      String        @map("plan_id")
+  status      VoucherStatus @default(AVAILABLE)
+  activatedAt DateTime?     @map("activated_at")
+  claimedBy   String?       @map("claimed_by")
+  claimedMac  String?       @map("claimed_mac")
+  expiresAt   DateTime?     @map("expires_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  batch       VoucherBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  plan        Plan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  customer    Customer?     @relation(fields: [claimedBy], references: [id], onDelete: SetNull)
+  entitlement Entitlement?
+
+  @@index([code])
+  @@index([status])
+  @@map("vouchers")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actorId      String?  @map("actor_id")
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String   @map("resource_id")
+  stateBefore  Json?    @map("state_before")
+  stateAfter   Json?    @map("state_after")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+// -----------------------------------------------------------------------------
+// FreeRADIUS Native Tables (mapped for typed queries where appropriate)
+// -----------------------------------------------------------------------------
+
+model RadCheck {
+  id        Int    @id @default(autoincrement())
+  username  String @default("")
+  attribute String @default("")
+  op        String @default("==")
+  value     String @default("")
+
+  @@index([username])
+  @@map("radcheck")
+}
+
+model RadReply {
+  id        Int    @id @default(autoincrement())
+  username  String @default("")
+  attribute String @default("")
+  op        String @default("=")
+  value     String @default("")
+
+  @@index([username])
+  @@map("radreply")
+}
+
+model RadAcct {
+  radacctid        BigInt    @id @default(autoincrement())
+  acctsessionid    String    @default("")
+  acctuniqueid     String    @default("")
+  username         String    @default("")
+  groupname        String    @default("")
+  realm            String    @default("")
+  nasipaddress     String
+  nasportid        String?
+  nasporttype      String?
+  acctstarttime    DateTime?
+  acctupdatetime   DateTime?
+  acctstoptime     DateTime?
+  acctinterval     Int?
+  acctsessiontime  BigInt?
+  acctauthentic    String?
+  connectinfoStart String?   @map("connectinfo_start")
+  connectinfoStop  String?   @map("connectinfo_stop")
+  acctinputoctets  BigInt?
+  acctoutputoctets BigInt?
+  calledstationid  String    @default("")
+  callingstationid String    @default("")
+  acctterminatecause String  @default("")
+  servicetype      String?
+  framedprotocol   String?
+  framedipaddress  String?
+
+  @@index([callingstationid, nasipaddress])
+  @@index([username])
+  @@index([acctsessionid])
+  @@map("radacct")
+}
+
+model Nas {
+  id          Int     @id @default(autoincrement())
+  nasname     String
+  shortname   String?
+  type        String? @default("other")
+  ports       Int?
+  secret      String
+  server      String?
+  community   String?
+  description String?
+
+  @@index([nasname])
+  @@map("nas")
+}

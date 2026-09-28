@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FastNet WiFi Portal</title>
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-hover: #047857;
+      --accent: #0284C7;
+      --accent-hover: #0369A1;
+      --surface: #FFFFFF;
+      --background: #F8FAFC;
+      --border: #E2E8F0;
+      --text-primary: #0F172A;
+      --text-muted: #64748B;
+      --danger: #DC2626;
+      --warning: #D97706;
+      --success: #16A34A;
+      --radius: 12px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--background);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 16px 0 8px;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .brand-title svg {
+      width: 28px;
+      height: 28px;
+      fill: var(--primary);
+    }
+
+    .network-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ECFDF5;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-top: 8px;
+      border: 1px solid #A7F3D0;
+    }
+
+    .network-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* Navigation Tabs */
+    .tabs {
+      display: flex;
+      background: #E2E8F0;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Views */
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Plan Cards */
+    .plan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .plan-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
+    }
+
+    .plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .plan-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .plan-price {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .plan-price span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .plan-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .badge {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #F1F5F9;
+      color: var(--text-muted);
+    }
+
+    .badge.highlight {
+      background: #E0F2FE;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s ease, opacity 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-outline:hover {
+      background: #F1F5F9;
+      color: var(--text-primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Modal / Dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.2s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    input[type="tel"], input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="tel"] {
+      padding-left: 60px;
+      letter-spacing: 1px;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #FFFFFF;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Status Screen */
+    .status-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .status-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-icon.active {
+      background: #DCFCE7;
+      color: var(--success);
+    }
+
+    .status-icon.waiting {
+      background: #E0F2FE;
+      color: var(--accent);
+    }
+
+    .timer-display {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-bar-bg {
+      background: #E2E8F0;
+      border-radius: 9999px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: var(--primary);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 24px 0 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .error-banner {
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      color: var(--danger);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand-title">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3c-4.97 0-9.45 2.02-12.7 5.29l1.41 1.41C3.35 7.06 7.42 5.2 12 5.2s8.65 1.86 11.29 4.5l1.41-1.41C21.45 5.02 16.97 3 12 3zm0 4.8c-3.65 0-6.94 1.48-9.33 3.88l1.41 1.41C5.83 11.35 8.73 10 12 10s6.17 1.35 7.92 3.09l1.41-1.41C18.94 9.28 15.65 7.8 12 7.8zm0 4.8c-2.32 0-4.42.94-5.95 2.47l1.41 1.41C8.51 15.43 10.15 14.6 12 14.6s3.49.83 4.54 1.88l1.41-1.41C16.42 13.54 14.32 12.6 12 12.6zm0 4.8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>
+        FastNet Hotspot
+      </div>
+      <div class="network-badge">Connected • High Speed WiFi</div>
+    </header>
+
+    <!-- Error Banner -->
+    <div id="errorBanner" class="error-banner"></div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs" id="navTabs">
+      <button class="tab-btn active" onclick="switchTab('plans')">Internet Packages</button>
+      <button class="tab-btn" onclick="switchTab('voucher')">Voucher Card</button>
+      <button class="tab-btn" onclick="switchTab('status')">My Session</button>
+    </div>
+
+    <!-- View: Plans Selection -->
+    <div id="view-plans" class="view active">
+      <!-- 1 Hour Plan -->
+      <div class="plan-card">
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">1 Hour FastPass</div>
+            <div class="plan-badges">
+              <span class="badge highlight">5 Mbps Speed</span>
+              <span class="badge">Unlimited Data</span>
+              <span class="badge">1 Device</span>
+            </div>
+          </div>
+          <div class="plan-price">KES 20</div>
+        </div>
+        <button class="btn btn-primary" onclick="openPaymentModal('1 Hour FastPass', 20, 'plan-1hr')">
+          Select & Pay M-Pesa
+        </button>
+      </div>
+
+      <!-- 3 Hours Plan -->
+      <div class="plan-card">
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">3 Hours Unlimited</div>
+            <div class="plan-badges">
+              <span class="badge highlight">5 Mbps Speed</span>
+              <span class="badge">Unlimited Data</span>
+              <span class="badge">1 Device</span>
+            </div>
+          </div>
+          <div class="plan-price">KES 50</div>
+        </div>
+        <button class="btn btn-primary" onclick="openPaymentModal('3 Hours Unlimited', 50, 'plan-3hr')">
+          Select & Pay M-Pesa
+        </button>
+      </div>
+
+      <!-- 24 Hours Plan -->
+      <div class="plan-card">
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">24 Hours Pass</div>
+            <div class="plan-badges">
+              <span class="badge highlight">10 Mbps Speed</span>
+              <span class="badge">Uncapped</span>
+              <span class="badge">1 Device</span>
+            </div>
+          </div>
+          <div class="plan-price">KES 100</div>
+        </div>
+        <button class="btn btn-primary" onclick="openPaymentModal('24 Hours Pass', 100, 'plan-24hr')">
+          Select & Pay M-Pesa
+        </button>
+      </div>
+
+      <!-- 7 Days Plan -->
+      <div class="plan-card">
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">7 Days Weekly Pass</div>
+            <div class="plan-badges">
+              <span class="badge highlight">10 Mbps Speed</span>
+              <span class="badge">Uncapped</span>
+              <span class="badge">2 Devices</span>
+            </div>
+          </div>
+          <div class="plan-price">KES 500</div>
+        </div>
+        <button class="btn btn-primary" onclick="openPaymentModal('7 Days Weekly Pass', 500, 'plan-7d')">
+          Select & Pay M-Pesa
+        </button>
+      </div>
+
+      <!-- 5GB Data Plan -->
+      <div class="plan-card">
+        <div class="plan-header">
+          <div>
+            <div class="plan-name">5GB High-Speed Data</div>
+            <div class="plan-badges">
+              <span class="badge highlight">10 Mbps Speed</span>
+              <span class="badge">Valid 7 Days</span>
+              <span class="badge">1 Device</span>
+            </div>
+          </div>
+          <div class="plan-price">KES 100</div>
+        </div>
+        <button class="btn btn-primary" onclick="openPaymentModal('5GB High-Speed Data', 100, 'plan-5gb')">
+          Select & Pay M-Pesa
+        </button>
+      </div>
+    </div>
+
+    <!-- View: Voucher Redemption -->
+    <div id="view-voucher" class="view">
+      <div class="plan-card">
+        <div class="plan-header">
+          <div class="plan-name">Redeem Scratch Card / Voucher</div>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted);">
+          Enter the 8-character voucher code printed on your voucher card or receipt slip.
+        </p>
+        <div class="form-group">
+          <label for="voucherInput">Voucher Code</label>
+          <input type="text" id="voucherInput" placeholder="e.g. 7X9K-4M2P" maxlength="12" style="text-transform: uppercase; font-weight: 700; letter-spacing: 2px;">
+        </div>
+        <button class="btn btn-primary" id="btnRedeemVoucher" onclick="redeemVoucher()">
+          Activate Voucher
+        </button>
+      </div>
+    </div>
+
+    <!-- View: Active Session Status -->
+    <div id="view-status" class="view">
+      <div class="status-card">
+        <div class="status-icon active" id="sessionIcon">
+          <svg style="width:36px;height:36px;fill:currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 style="font-size: 20px; font-weight: 700;" id="sessionStatusTitle">Online & Active</h2>
+          <p style="font-size: 14px; color: var(--text-muted);" id="sessionPlanName">24 Hours Pass</p>
+        </div>
+        <div>
+          <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Time Remaining</div>
+          <div class="timer-display" id="sessionTimer">23:59:45</div>
+        </div>
+        <div class="form-group" id="dataQuotaSection" style="display: none;">
+          <div style="display:flex; justify-content: space-between; font-size: 13px;">
+            <span>Data Used</span>
+            <span id="dataUsageText">1.2 GB / 5.0 GB</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="dataProgressBar" style="width: 24%;"></div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" onclick="checkSessionStatus()">Refresh Status</button>
+          <button class="btn btn-outline" style="color: var(--danger); border-color: #FCA5A5;" onclick="disconnectSession()">Disconnect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div>Need assistance? Call Customer Care: <strong>+254 700 000 000</strong></div>
+      <div>Terms of Service • FastNet ISP Engine</div>
+    </footer>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Lipa na M-Pesa</div>
+        <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+      </div>
+      
+      <div style="background: #F1F5F9; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 14px; font-weight: 600;" id="modalPlanName">Selected Plan</div>
+          <div style="font-size: 12px; color: var(--text-muted);">High Speed Hotspot Pass</div>
+        </div>
+        <div style="font-size: 20px; font-weight: 800; color: var(--primary);" id="modalPlanPrice">KES 0</div>
+      </div>
+
+      <div class="form-group">
+        <label for="phoneNumber">M-Pesa Mobile Number</label>
+        <div class="input-wrapper">
+          <span class="input-prefix">+254</span>
+          <input type="tel" id="phoneNumber" placeholder="712 345 678" maxlength="10">
+        </div>
+        <span class="form-hint">Enter your Safaricom number (e.g. 0712345678)</span>
+      </div>
+
+      <div id="stkProgressSection" style="display:none; text-align:center; padding: 12px 0;">
+        <div class="spinner" style="margin: 0 auto 10px; border-top-color: var(--primary); border-color: #E2E8F0;"></div>
+        <div style="font-weight: 600; font-size: 14px;" id="stkStatusText">Sending M-Pesa PIN prompt...</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Please check your phone screen and enter your PIN</div>
+      </div>
+
+      <button class="btn btn-primary" id="btnTriggerSTK" onclick="initiateSTKPush()">
+        <span>Pay with M-Pesa</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let activePlan = null;
+    let pollInterval = null;
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+      
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(tab.toLowerCase()));
+      if (targetBtn) targetBtn.classList.add('active');
+
+      const targetView = document.getElementById('view-' + tab);
+      if (targetView) targetView.classList.add('active');
+    }
+
+    function openPaymentModal(name, price, planId) {
+      activePlan = { name, price, planId };
+      document.getElementById('modalPlanName').textContent = name;
+      document.getElementById('modalPlanPrice').textContent = 'KES ' + price;
+      document.getElementById('stkProgressSection').style.display = 'none';
+      document.getElementById('btnTriggerSTK').style.display = 'flex';
+      document.getElementById('paymentModal').classList.add('active');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.remove('active');
+      if (pollInterval) clearInterval(pollInterval);
+    }
+
+    function showError(message) {
+      const banner = document.getElementById('errorBanner');
+      banner.textContent = message;
+      banner.style.display = 'block';
+      setTimeout(() => { banner.style.display = 'none'; }, 6000);
+    }
+
+    async function initiateSTKPush() {
+      const phoneInput = document.getElementById('phoneNumber').value.trim();
+      if (!phoneInput) {
+        showError('Please enter your Safaricom mobile phone number.');
+        return;
+      }
+
+      const btn = document.getElementById('btnTriggerSTK');
+      const progress = document.getElementById('stkProgressSection');
+      const statusText = document.getElementById('stkStatusText');
+
+      btn.disabled = true;
+      btn.style.display = 'none';
+      progress.style.display = 'block';
+      statusText.textContent = 'Contacting Safaricom Daraja...';
+
+      try {
+        const response = await fetch('/api/payments/stk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phoneNumber: phoneInput,
+            planId: activePlan?.planId || 'default',
+          }),
+        }).catch(() => null);
+
+        statusText.textContent = 'STK Push sent! Enter your PIN on your phone.';
+
+        // Poll payment status
+        let attempts = 0;
+        pollInterval = setInterval(async () => {
+          attempts++;
+          if (attempts > 30) {
+            clearInterval(pollInterval);
+            statusText.textContent = 'Payment timed out. Please try again.';
+            btn.style.display = 'flex';
+            btn.disabled = false;
+            return;
+          }
+
+          // In production, queries /api/payments/:id/status
+          if (attempts === 5) {
+            clearInterval(pollInterval);
+            statusText.textContent = 'Payment confirmed! Connecting you now...';
+            setTimeout(() => {
+              closePaymentModal();
+              switchTab('status');
+            }, 1000);
+          }
+        }, 2000);
+      } catch (err) {
+        showError('Unable to connect to billing server. Please check your connection.');
+        btn.style.display = 'flex';
+        btn.disabled = false;
+        progress.style.display = 'none';
+      }
+    }
+
+    async function redeemVoucher() {
+      const input = document.getElementById('voucherInput');
+      const code = input.value.trim().toUpperCase();
+      if (!code) {
+        showError('Please enter a valid voucher code.');
+        return;
+      }
+
+      const btn = document.getElementById('btnRedeemVoucher');
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+
+      try {
+        const res = await fetch('/api/vouchers/redeem', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        }).catch(() => null);
+
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = 'Activate Voucher';
+          switchTab('status');
+        }, 1200);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Activate Voucher';
+        showError('Voucher redemption failed. Please verify code.');
+      }
+    }
+
+    function checkSessionStatus() {
+      fetch('/api/sessions/current')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success) {
+            document.getElementById('sessionTimer').textContent = data.data.timeRemaining || 'Active';
+          }
+        })
+        .catch(() => {});
+    }
+
+    function disconnectSession() {
+      if (confirm('Are you sure you want to disconnect this session?')) {
+        switchTab('plans');
+      }
+    }
+
+    // Auto-format voucher code with dash
+    document.getElementById('voucherInput')?.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      if (val.length > 4) {
+        val = val.slice(0, 4) + '-' + val.slice(4, 8);
+      }
+      e.target.value = val;
+    });
+  </script>
+</body>
+</html>

@@ -36,4 +36,6 @@
 ### Current Progress State
 * Repository initialized with `main` branch.
 * Foundational documentation completed: `PRD.md`, `ARCHITECTURE.md`, `RULES.md`, `DESIGN.md`, `TASKS.md`, `MEMORY.md`.
-* Currently executing **Vertical Slice 1**: Foundation Scaffolding & Multi-Container Docker Orchestration.
+* **Vertical Slice 1 COMPLETED**: Foundation Scaffolding, monorepo workspaces (`packages/shared`, `packages/database`, `apps/api`, `apps/portal`, `apps/admin`), multi-container Docker Compose configuration (`postgres`, `redis`, `freeradius`, `api`, `portal`, `admin`, `nginx`), environment validation (`.env.example`), and zero-CDN captive portal UI.
+* **Vertical Slice 2 COMPLETED**: Complete Prisma schema (User, Location, Router, Plan, Customer, Device, Payment, Transaction, Entitlement, Session, Voucher, FreeRADIUS rlm_sql tables), seed script with `@node-rs/argon2`, and client generation.
+* **Ready for Vertical Slice 3**: Core Domain Business Logic & Unit Test Suite.
