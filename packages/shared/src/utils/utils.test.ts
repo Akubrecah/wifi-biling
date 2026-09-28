@@ -4,6 +4,14 @@ import { normalizeMacAddress, isLocallyAdministeredMac } from './mac.js';
 import { normalizeKenyanPhoneNumber } from './phone.js';
 import { formatMikrotikRateLimit } from './rate-limit.js';
 import { generateVoucherCode, normalizeVoucherCode } from './voucher.js';
+import {
+  calculateEntitlementExpiry,
+  calculateRemainingSeconds,
+  calculateRemainingBytes,
+  isEntitlementExpired,
+  formatBytes,
+  formatRemainingDuration,
+} from './entitlement.js';
 
 describe('Shared Utilities Test Suite', () => {
   describe('MAC Address Utilities', () => {
@@ -80,4 +88,99 @@ describe('Shared Utilities Test Suite', () => {
       assert.equal(normalizeVoucherCode('H7W8 2K4N'), 'H7W82K4N');
     });
   });
+
+  describe('Entitlement & Expiry Engine', () => {
+    it('should calculate expiry timestamp for time-based plans', () => {
+      const start = new Date('2026-09-28T10:00:00.000Z');
+      const expiry = calculateEntitlementExpiry({
+        planType: 'TIME_BASED',
+        durationSec: 3600, // 1 hour
+        startTime: start,
+      });
+
+      assert.ok(expiry);
+      assert.equal(expiry.toISOString(), '2026-09-28T11:00:00.000Z');
+    });
+
+    it('should return null expiry for pure data-based plans without time limit', () => {
+      const expiry = calculateEntitlementExpiry({
+        planType: 'DATA_BASED',
+        durationSec: null,
+      });
+
+      assert.equal(expiry, null);
+    });
+
+    it('should calculate remaining seconds correctly', () => {
+      const now = new Date('2026-09-28T10:00:00.000Z');
+      const expiresAt = new Date('2026-09-28T10:30:00.000Z');
+      const remaining = calculateRemainingSeconds(expiresAt, now);
+      assert.equal(remaining, 1800);
+
+      // Return 0 if already passed
+      const past = new Date('2026-09-28T09:00:00.000Z');
+      assert.equal(calculateRemainingSeconds(past, now), 0);
+
+      // Return null for unlimited time
+      assert.equal(calculateRemainingSeconds(null, now), null);
+    });
+
+    it('should calculate remaining data bytes correctly', () => {
+      const total = 5368709120n; // 5 GB
+      const used = 1073741824n;  // 1 GB
+      assert.equal(calculateRemainingBytes(total, used), 4294967296n); // 4 GB
+
+      // Capped at 0 when used exceeds total
+      assert.equal(calculateRemainingBytes(total, 6000000000n), 0n);
+
+      // Null for uncapped data
+      assert.equal(calculateRemainingBytes(null, used), null);
+    });
+
+    it('should determine entitlement expiration state accurately', () => {
+      const now = new Date('2026-09-28T12:00:00.000Z');
+
+      // 1. Time-expired
+      assert.equal(
+        isEntitlementExpired({
+          expiresAt: new Date('2026-09-28T11:59:59.000Z'),
+          totalBytes: null,
+          usedBytes: 0n,
+        }, now),
+        true
+      );
+
+      // 2. Data quota exhausted
+      assert.equal(
+        isEntitlementExpired({
+          expiresAt: new Date('2026-09-28T13:00:00.000Z'),
+          totalBytes: 1000n,
+          usedBytes: 1000n,
+        }, now),
+        true
+      );
+
+      // 3. Still valid
+      assert.equal(
+        isEntitlementExpired({
+          expiresAt: new Date('2026-09-28T13:00:00.000Z'),
+          totalBytes: 5000n,
+          usedBytes: 2000n,
+        }, now),
+        false
+      );
+    });
+
+    it('should format bytes and durations for human consumption', () => {
+      assert.equal(formatBytes(0), '0 B');
+      assert.equal(formatBytes(1024), '1.00 KB');
+      assert.equal(formatBytes(5368709120n), '5.00 GB');
+
+      assert.equal(formatRemainingDuration(0), '0s');
+      assert.equal(formatRemainingDuration(45), '45s');
+      assert.equal(formatRemainingDuration(3665), '1h 1m 5s');
+      assert.equal(formatRemainingDuration(90000), '1d 1h');
+    });
+  });
 });
+

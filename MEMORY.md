@@ -38,4 +38,5 @@
 * Foundational documentation completed: `PRD.md`, `ARCHITECTURE.md`, `RULES.md`, `DESIGN.md`, `TASKS.md`, `MEMORY.md`.
 * **Vertical Slice 1 COMPLETED**: Foundation Scaffolding, monorepo workspaces (`packages/shared`, `packages/database`, `apps/api`, `apps/portal`, `apps/admin`), multi-container Docker Compose configuration (`postgres`, `redis`, `freeradius`, `api`, `portal`, `admin`, `nginx`), environment validation (`.env.example`), and zero-CDN captive portal UI.
 * **Vertical Slice 2 COMPLETED**: Complete Prisma schema (User, Location, Router, Plan, Customer, Device, Payment, Transaction, Entitlement, Session, Voucher, FreeRADIUS rlm_sql tables), seed script with `@node-rs/argon2`, and client generation.
-* **Ready for Vertical Slice 3**: Core Domain Business Logic & Unit Test Suite.
+* **Vertical Slice 3 COMPLETED**: Core Domain Business Logic & Unit Test Suite (Bandwidth profile calculation, Mikrotik-Rate-Limit strings, Entitlement expiry calculations, Data quota exhaustion engine, cryptographically secure voucher generation). 18 automated tests passing (100%).
+* **Ready for Vertical Slice 4**: M-Pesa Daraja Engine (STK Push, Webhook, Idempotency, Ledger).

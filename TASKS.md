@@ -8,7 +8,7 @@
 | :--- | :--- | :--- |
 | **Slice 1** | Foundation Scaffolding & Multi-Container Docker Orchestration | 🟢 COMPLETED |
 | **Slice 2** | Database Schema, Prisma Migrations & Seed Data | 🟢 COMPLETED |
-| **Slice 3** | Core Domain Business Logic & Unit Test Suite | ⚪ BACKLOG |
+| **Slice 3** | Core Domain Business Logic & Unit Test Suite | 🟢 COMPLETED |
 | **Slice 4** | M-Pesa Daraja Engine (STK Push, Webhook, Idempotency, Ledger) | ⚪ BACKLOG |
 | **Slice 5** | FreeRADIUS (rlm_sql) & MikroTik RouterOS Gateway Controller | ⚪ BACKLOG |
 | **Slice 6** | Session Accounting, Quota Enforcer & BullMQ Expiry Watchdog | ⚪ BACKLOG |
@@ -53,15 +53,15 @@
   - Router definition template for MikroTik-E7161B
 * *Acceptance Criteria*: Database migrations apply cleanly; seed script populates default catalog and superadmin; relations enforce integrity.
 
-#### [ ] Slice 3: Core Domain Business Logic & Unit Test Suite
-* [ ] Bandwidth Profile Calculator:
+#### [x] Slice 3: Core Domain Business Logic & Unit Test Suite
+* [x] Bandwidth Profile Calculator:
   - Translate Plan download/upload/burst values into valid `Mikrotik-Rate-Limit` strings.
-* [ ] Entitlement & Expiry Engine:
+* [x] Entitlement & Expiry Engine:
   - Time-based expiry calculations (`expires_at = now + duration`).
   - Data quota remaining calculations.
-* [ ] Voucher Code Generator:
+* [x] Voucher Code Generator:
   - Cryptographically secure alphanumeric generator avoiding visual ambiguities (`O` vs `0`, `I` vs `1`, `L`).
-* [ ] Unit tests for all domain calculators using Vitest / Jest.
+* [x] Unit tests for all domain calculators using node:test runner.
 * *Acceptance Criteria*: 100% test pass rate on plan math, rate-limit strings, and voucher code entropy.
 
 #### [ ] Slice 4: M-Pesa Daraja Payment Engine
