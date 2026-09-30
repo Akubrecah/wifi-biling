@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "http://169.58.96.131:3001/api/:match*"
+    },
+    {
+      "source": "/hotspot",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mikrotik/login.html",
+      "destination": "/index.html"
+    }
+  ]
+}

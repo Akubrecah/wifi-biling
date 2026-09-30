@@ -479,6 +479,7 @@
 
     <!-- View: Plans Selection -->
     <div id="view-plans" class="view active">
+      <div id="plansContainer" style="display: flex; flex-direction: column; gap: 12px;">
       <!-- 1 Hour Plan -->
       <div class="plan-card">
         <div class="plan-header">
@@ -567,6 +568,7 @@
         <button class="btn btn-primary" onclick="openPaymentModal('5GB High-Speed Data', 100, 'plan-5gb')">
           Select & Pay M-Pesa
         </button>
+      </div>
       </div>
     </div>
 
@@ -815,6 +817,60 @@
       }
       e.target.value = val;
     });
+
+    // Inspect router hotspot query params
+    const routerParams = new URLSearchParams(window.location.search);
+    const clientMac = routerParams.get('mac') || '';
+    const clientIp = routerParams.get('ip') || '';
+    const linkLoginOnly = routerParams.get('link-login-only') || '';
+
+    if (clientMac || clientIp) {
+      const badge = document.querySelector('.network-badge');
+      if (badge) {
+        badge.textContent = `Connected • ${clientIp ? clientIp : ''} ${clientMac ? '[' + clientMac + ']' : ''}`;
+        badge.style.borderColor = 'var(--primary)';
+        badge.style.color = 'var(--primary)';
+      }
+      if (linkLoginOnly) {
+        sessionStorage.setItem('linkLoginOnly', linkLoginOnly);
+      }
+      if (clientMac) sessionStorage.setItem('clientMac', clientMac);
+      if (clientIp) sessionStorage.setItem('clientIp', clientIp);
+    }
+
+    // Dynamically load active plans from API
+    async function loadPlans() {
+      try {
+        const res = await fetch('/api/plans');
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          const container = document.getElementById('plansContainer');
+          if (!container) return;
+          container.innerHTML = json.data.map(plan => `
+            <div class="plan-card">
+              <div class="plan-header">
+                <div>
+                  <div class="plan-name">${plan.name}</div>
+                  <div class="plan-badges">
+                    <span class="badge highlight">${Math.round(plan.downloadSpeed / 1024)} Mbps Speed</span>
+                    <span class="badge">${plan.planType === 'TIME_BASED' ? 'Unlimited Data' : (plan.dataLimitBytes ? (Math.round(Number(plan.dataLimitBytes) / (1024 * 1024 * 1024)) + 'GB Data') : 'Data Quota')}</span>
+                    <span class="badge">${plan.maxDevices || 1} Device${(plan.maxDevices || 1) > 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+                <div class="plan-price">${plan.currency} ${plan.price}</div>
+              </div>
+              <button class="btn btn-primary" onclick="openPaymentModal('${plan.name}', ${plan.price}, '${plan.id}')">
+                Select & Pay M-Pesa
+              </button>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.warn('Could not load dynamic plans, fallback active', e);
+      }
+    }
+
+    loadPlans();
   </script>
 </body>
 </html>

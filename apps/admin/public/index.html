@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard | WiFi Billing Platform</title>
+  <title>FastNet ISP & Hotspot Controller</title>
   <style>
     :root {
       --bg: #0F172A;
@@ -13,6 +13,7 @@
       --text: #F8FAFC;
       --text-muted: #94A3B8;
       --primary: #10B981;
+      --primary-hover: #059669;
       --accent: #38BDF8;
       --danger: #EF4444;
       --warning: #F59E0B;
@@ -119,6 +120,50 @@
       gap: 24px;
     }
 
+    /* Views */
+    .view-section {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .view-section.active {
+      display: flex;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #0F172A;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      background: #334155;
+    }
+
     /* Metric Cards */
     .metrics-grid {
       display: grid;
@@ -155,7 +200,7 @@
       font-weight: 600;
     }
 
-    /* Data Tables */
+    /* Cards & Data Tables */
     .card {
       background: var(--card);
       border: 1px solid var(--card-border);
@@ -216,6 +261,27 @@
       color: var(--primary);
     }
 
+    .status-offline {
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--text-muted);
+    }
+
+    .btn-action {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-action:hover {
+      background: var(--accent);
+      color: #0F172A;
+    }
+
     .btn-kick {
       background: rgba(239, 68, 68, 0.2);
       color: var(--danger);
@@ -231,124 +297,769 @@
       background: var(--danger);
       color: #FFFFFF;
     }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--sidebar);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0F172A;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    pre {
+      background: #0B0F19;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      color: #38BDF8;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      max-height: 250px;
+    }
   </style>
 </head>
 <body>
+  <!-- Sidebar Navigation -->
   <aside class="sidebar">
     <div class="brand">
       <svg class="brand-icon" viewBox="0 0 24 24">
         <path d="M12 3c-4.97 0-9.45 2.02-12.7 5.29l1.41 1.41C3.35 7.06 7.42 5.2 12 5.2s8.65 1.86 11.29 4.5l1.41-1.41C21.45 5.02 16.97 3 12 3zm0 4.8c-3.65 0-6.94 1.48-9.33 3.88l1.41 1.41C5.83 11.35 8.73 10 12 10s6.17 1.35 7.92 3.09l1.41-1.41C18.94 9.28 15.65 7.8 12 7.8zm0 4.8c-2.32 0-4.42.94-5.95 2.47l1.41 1.41C8.51 15.43 10.15 14.6 12 14.6s3.49.83 4.54 1.88l1.41-1.41C16.42 13.54 14.32 12.6 12 12.6zm0 4.8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
       </svg>
-      FastNet Admin
+      FastNet Controller
     </div>
     <nav class="nav-links">
-      <div class="nav-item active">Overview Dashboard</div>
-      <div class="nav-item">Router Gateways</div>
-      <div class="nav-item">Internet Plans</div>
-      <div class="nav-item">Live Sessions</div>
-      <div class="nav-item">Voucher Studio</div>
-      <div class="nav-item">Financial Ledger</div>
-      <div class="nav-item">Audit Logs</div>
+      <div class="nav-item active" data-view="overview" onclick="switchNav('overview')">📊 Overview Dashboard</div>
+      <div class="nav-item" data-view="onboard" onclick="switchNav('onboard')">🚀 Onboard Router Wizard</div>
+      <div class="nav-item" data-view="routers" onclick="switchNav('routers')">🌐 Router Gateways</div>
+      <div class="nav-item" data-view="plans" onclick="switchNav('plans')">📦 Internet Packages</div>
+      <div class="nav-item" data-view="sessions" onclick="switchNav('sessions')">⚡ Live Sessions</div>
     </nav>
   </aside>
 
+  <!-- Main Area -->
   <main class="main">
     <header>
-      <div><strong>HQ Hotspot Management</strong></div>
-      <div class="user-pill">superadmin@wifibilling.local</div>
+      <div><strong>Carrier Hotspot & Billing Orchestration</strong></div>
+      <div style="display:flex; align-items:center; gap: 12px;">
+        <a href="http://169.58.96.131:3000" target="_blank" class="btn btn-outline" style="font-size:12px; padding: 4px 10px; text-decoration:none;">View Captive Portal ↗</a>
+        <div class="user-pill">superadmin@wifibilling.local</div>
+      </div>
     </header>
 
     <div class="content">
-      <!-- Top Metrics -->
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-title">Today's Revenue</div>
-          <div class="metric-value">KES 18,450</div>
-          <div class="metric-trend">+14% vs yesterday</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Active Devices</div>
-          <div class="metric-value">142</div>
-          <div class="metric-trend">98% satisfaction</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Online Routers</div>
-          <div class="metric-value">1 / 1</div>
-          <div class="metric-trend">MT-E7161B-01</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-title">Vouchers Claimed</div>
-          <div class="metric-value">48</div>
-          <div class="metric-trend">KES 3,200 value</div>
-        </div>
-      </div>
 
-      <!-- Router Fleet Table -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Router Fleet Status</div>
+      <!-- View 1: Overview Dashboard -->
+      <section id="view-overview" class="view-section active">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Today's Revenue</div>
+            <div class="metric-value">KES 18,450</div>
+            <div class="metric-trend">M-Pesa STK Active</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Active Devices</div>
+            <div class="metric-value" id="metricActiveDevices">0</div>
+            <div class="metric-trend">RADIUS Sessions</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Online Routers</div>
+            <div class="metric-value" id="metricOnlineRouters">1</div>
+            <div class="metric-trend">MikroTik RouterOS</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Total Plans</div>
+            <div class="metric-value" id="metricTotalPlans">7</div>
+            <div class="metric-trend">Bandwidth Packages</div>
+          </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Router Name</th>
-              <th>NAS Identifier</th>
-              <th>IP Address</th>
-              <th>Active Clients</th>
-              <th>Heartbeat</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>MikroTik-E7161B Gateway</td>
-              <td><code>MT-E7161B-01</code></td>
-              <td>192.168.88.1</td>
-              <td>142 clients</td>
-              <td>Just now</td>
-              <td><span class="status-badge status-online">Online</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
-      <!-- Live Connected Sessions Table -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Recent Active Sessions</div>
+        <!-- Managed Router Fleet -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Managed Router Fleet</div>
+            <button class="btn btn-primary" onclick="switchNav('onboard')">🚀 Onboard Router</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Router Name</th>
+                <th>NAS Identifier</th>
+                <th>IP Address</th>
+                <th>Active Clients</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="overviewFleetTable">
+              <tr><td colspan="6" style="text-align:center;">Loading fleet...</td></tr>
+            </tbody>
+          </table>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Client IP</th>
-              <th>MAC Address</th>
-              <th>Plan</th>
-              <th>Traffic (DL / UL)</th>
-              <th>Connected Duration</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>192.168.88.24</td>
-              <td><code>D8:5E:D3:1A:4C:80</code></td>
-              <td>24 Hours Pass</td>
-              <td>420 MB / 85 MB</td>
-              <td>2h 15m</td>
-              <td><button class="btn-kick" onclick="alert('Disconnect-Request (PoD) sent to MikroTik port 3799')">Disconnect</button></td>
-            </tr>
-            <tr>
-              <td>192.168.88.31</td>
-              <td><code>7C:B2:7D:99:E1:02</code></td>
-              <td>5GB Data Pass</td>
-              <td>1.8 GB / 210 MB</td>
-              <td>5h 42m</td>
-              <td><button class="btn-kick" onclick="alert('Disconnect-Request (PoD) sent to MikroTik port 3799')">Disconnect</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+
+        <!-- Active Captive Portal Packages Grid on Overview -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Captive Portal Packages (Customer View)</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                These packages appear on the Captive Portal (<code>http://169.58.96.131:3000</code>) for clients connecting to your hotspot.
+              </p>
+            </div>
+            <div style="display:flex; gap: 8px;">
+              <button class="btn btn-outline" onclick="switchNav('plans')">Manage All Packages</button>
+              <button class="btn btn-primary" onclick="openPlanModal()">+ Add Package</button>
+            </div>
+          </div>
+          <div style="padding: 20px;">
+            <div id="overviewPlansGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
+              <div style="color: var(--text-muted);">Loading packages...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View: Router Onboarding Wizard -->
+      <section id="view-onboard" class="view-section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title" style="font-size: 18px;">🚀 MikroTik RouterOS Onboarding Wizard</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Follow these 3 simple steps to connect your MikroTik router (v6.x or v7.x) to the billing system &amp; captive portal.
+              </p>
+            </div>
+            <button class="btn btn-outline" onclick="testRadiusConnection()">⚡ Test AAA Authentication</button>
+          </div>
+
+          <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
+            <!-- Step 1: Router Parameters -->
+            <div>
+              <h4 style="color: var(--accent); margin-bottom: 12px;">Step 1: Configure Router Parameters</h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                <div class="form-group">
+                  <label>Router Name</label>
+                  <input type="text" id="wizRouterName" value="MikroTik-E7161B Gateway" oninput="updateLiveScript()">
+                </div>
+                <div class="form-group">
+                  <label>NAS Identifier (Unique)</label>
+                  <input type="text" id="wizNasId" value="MT-E7161B-01" oninput="updateLiveScript()">
+                </div>
+                <div class="form-group">
+                  <label>Router IP (Hotspot Gateway)</label>
+                  <input type="text" id="wizRouterIp" value="192.168.88.1" oninput="updateLiveScript()">
+                </div>
+                <div class="form-group">
+                  <label>Billing Server IP / FQDN (VPS)</label>
+                  <input type="text" id="wizServerIp" value="169.58.96.131" oninput="updateLiveScript()">
+                </div>
+                <div class="form-group">
+                  <label>RADIUS Shared Secret</label>
+                  <input type="text" id="wizRadiusSecret" value="testing123_production_radius_secret" oninput="updateLiveScript()">
+                </div>
+              </div>
+              <div style="margin-top: 14px; display:flex; gap: 12px; align-items:center;">
+                <button class="btn btn-primary" onclick="saveWizardRouter()">Save Router into Billing Database</button>
+                <span id="wizSaveStatus" style="font-size: 13px; font-weight:600; color: var(--primary);"></span>
+              </div>
+            </div>
+
+            <!-- Step 2: 1-Click RouterOS Script -->
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); border-radius: 8px; padding: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                  <h4 style="color: var(--accent);">Step 2: Run Terminal Script in MikroTik</h4>
+                  <p style="font-size: 12px; color: var(--text-muted);">
+                    Open WinBox → <strong>Terminal</strong> (or SSH to your router) and paste this entire block:
+                  </p>
+                </div>
+                <button class="btn btn-primary" onclick="copyToClipboard('wizScriptCode')">Copy Terminal Script</button>
+              </div>
+              <pre id="wizScriptCode" style="max-height: 240px;"></pre>
+            </div>
+
+            <!-- Step 3: Captive Portal login.html Setup -->
+            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); border-radius: 8px; padding: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                  <h4 style="color: var(--accent);">Step 3: Setup Captive Portal Redirect</h4>
+                  <p style="font-size: 12px; color: var(--text-muted);">
+                    This enables the router to automatically redirect connecting phones/PCs to your packages.
+                  </p>
+                </div>
+                <div style="display:flex; gap: 8px;">
+                  <button class="btn btn-primary" onclick="downloadLoginHtml()">Download login.html</button>
+                  <button class="btn btn-outline" onclick="copyToClipboard('wizFetchCommand')">Copy Auto Fetch Command</button>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                <div style="background: #0B0F19; padding: 14px; border-radius: 6px; border: 1px solid #334155;">
+                  <strong style="font-size: 13px; color: #F8FAFC;">Option A: 1-Command Auto Fetch (Recommended)</strong>
+                  <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0;">Paste this command in your MikroTik terminal to fetch login.html automatically:</p>
+                  <pre id="wizFetchCommand" style="font-size: 11px; max-height: 90px;"></pre>
+                </div>
+                <div style="background: #0B0F19; padding: 14px; border-radius: 6px; border: 1px solid #334155;">
+                  <strong style="font-size: 13px; color: #F8FAFC;">Option B: WinBox Drag-and-Drop</strong>
+                  <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0;">
+                    Click the <strong>"Download login.html"</strong> button above, then in WinBox click <strong>Files</strong> and drag <code>login.html</code> directly into your <code>hotspot/</code> folder.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: Verification -->
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 16px;">
+              <h4 style="color: var(--primary); margin-bottom: 6px;">Step 4: Connect Device &amp; Start Billing!</h4>
+              <p style="font-size: 13px; color: var(--text-muted);">
+                Connect any smartphone, laptop, or tablet to your router's WiFi SSID. The FastNet Hotspot Portal will pop up immediately showing all packages (1 Hour, 3 Hours, 24 Hours, 5GB). Customers can pay via M-Pesa or enter vouchers!
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: Router Gateways -->
+      <section id="view-routers" class="view-section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Router Fleet Configuration</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Manage and onboard MikroTik RouterOS gateways for RADIUS AAA and Hotspot Captive Portal.
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="switchNav('onboard')">+ Onboard New Router</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Router Name</th>
+                <th>NAS Identifier</th>
+                <th>IP Address</th>
+                <th>Location</th>
+                <th>RADIUS Secret</th>
+                <th>Active Clients</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="routersFleetTable">
+              <tr><td colspan="7" style="text-align:center;">Loading routers...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- View 3: Internet Packages / Plans -->
+      <section id="view-plans" class="view-section">
+        <!-- Visual Package Showcase -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Customer Captive Portal Preview</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                These cards render dynamically on <code>http://169.58.96.131:3000</code> when users connect to your hotspot.
+              </p>
+            </div>
+            <div style="display:flex; gap: 8px;">
+              <a href="http://169.58.96.131:3000" target="_blank" class="btn btn-outline" style="text-decoration:none;">Open Portal in New Tab ↗</a>
+              <button class="btn btn-primary" onclick="openPlanModal()">+ Add New Package</button>
+            </div>
+          </div>
+          <div style="padding: 20px;">
+            <div id="plansVisualGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
+              <div style="color: var(--text-muted);">Loading packages...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Bandwidth &amp; Billing Packages Table</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Configure package pricing, bandwidth rate limits, duration, and data quotas.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Package Name</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Speed (Down / Up)</th>
+                <th>Validity / Quota</th>
+                <th>Max Devices</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="plansTableBody">
+              <tr><td colspan="7" style="text-align:center;">Loading packages...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- View 4: Live Sessions -->
+      <section id="view-sessions" class="view-section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Live Connected Hotspot Clients</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Real-time sessions reported by FreeRADIUS accounting (radacct).
+              </p>
+            </div>
+            <button class="btn btn-outline" onclick="loadSessions()">Refresh Sessions</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Client IP</th>
+                <th>MAC Address</th>
+                <th>Router NAS IP</th>
+                <th>Traffic (DL / UL)</th>
+                <th>Session Start</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sessionsTableBody">
+              <tr><td colspan="7" style="text-align:center;">No active sessions found. Connect a device to test.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </div>
   </main>
+
+  <!-- Modal: Router Generated Scripts Output -->
+  <div class="modal-overlay" id="scriptResultModal">
+    <div class="modal" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Router Onboarding Script Ready</h3>
+        <button class="btn-outline" style="padding: 4px 8px;" onclick="closeModal('scriptResultModal')">&times;</button>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted);">
+        Paste this script directly into your <strong>MikroTik Terminal</strong> to activate RADIUS, Accounting, and Walled Garden:
+      </p>
+      <div style="position: relative;">
+        <button class="btn btn-primary" style="position: absolute; right: 10px; top: 10px; font-size: 12px; padding: 4px 8px;" onclick="copyToClipboard('scriptPre')">Copy Script</button>
+        <pre id="scriptPre"></pre>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;">
+        Replace your router's <strong><code>hotspot/login.html</code></strong> with this snippet to redirect clients to the Captive Portal:
+      </p>
+      <div style="position: relative;">
+        <button class="btn btn-primary" style="position: absolute; right: 10px; top: 10px; font-size: 12px; padding: 4px 8px;" onclick="copyToClipboard('htmlPre')">Copy login.html</button>
+        <pre id="htmlPre"></pre>
+      </div>
+      <div style="display:flex; justify-content: flex-end; margin-top: 10px;">
+        <button class="btn btn-primary" onclick="closeModal('scriptResultModal')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create Plan -->
+  <div class="modal-overlay" id="planModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Create Internet Package</h3>
+        <button class="btn-outline" style="padding: 4px 8px;" onclick="closeModal('planModal')">&times;</button>
+      </div>
+      <form id="planForm" onsubmit="handleCreatePlan(event)">
+        <div class="form-group">
+          <label>Package Name</label>
+          <input type="text" id="plName" placeholder="e.g. 2 Hours FastPass" required>
+        </div>
+        <div class="form-group">
+          <label>Price (KES)</label>
+          <input type="number" id="plPrice" placeholder="e.g. 30" required>
+        </div>
+        <div class="form-group">
+          <label>Package Type</label>
+          <select id="plType">
+            <option value="TIME_BASED">Time-Based (Unlimited Data)</option>
+            <option value="HYBRID">Data-Capped (e.g. 5GB)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Duration (Hours)</label>
+          <input type="number" id="plDurationHours" placeholder="e.g. 2" value="2">
+        </div>
+        <div class="form-group">
+          <label>Download Speed (Mbps)</label>
+          <input type="number" id="plDownMbps" placeholder="e.g. 5" value="5" required>
+        </div>
+        <div class="form-group">
+          <label>Upload Speed (Mbps)</label>
+          <input type="number" id="plUpMbps" placeholder="e.g. 2" value="2" required>
+        </div>
+        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('planModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Package</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function switchNav(viewId) {
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-view') === viewId);
+      });
+      document.querySelectorAll('.view-section').forEach(el => {
+        el.classList.toggle('active', el.id === 'view-' + viewId);
+      });
+
+      if (viewId === 'routers') loadRouters();
+      if (viewId === 'plans') loadPlans();
+      if (viewId === 'sessions') loadSessions();
+      if (viewId === 'overview') { loadRouters(); loadPlans(); loadSessions(); }
+      if (viewId === 'onboard') updateLiveScript();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openPlanModal() { openModal('planModal'); }
+
+    function copyToClipboard(elementId) {
+      const el = document.getElementById(elementId);
+      const text = el.innerText || el.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!');
+      });
+    }
+
+    function downloadLoginHtml() {
+      window.location.href = '/download/login.html';
+    }
+
+    function updateLiveScript() {
+      const name = document.getElementById('wizRouterName').value || 'MikroTik Gateway';
+      const nasId = document.getElementById('wizNasId').value || 'MT-01';
+      const routerIp = document.getElementById('wizRouterIp').value || '192.168.88.1';
+      const serverIp = document.getElementById('wizServerIp').value || '169.58.96.131';
+      const secret = document.getElementById('wizRadiusSecret').value || 'testing123_production_radius_secret';
+
+      const script = `# 1. Configure FreeRADIUS AAA Connection
+/radius
+add service=hotspot address=\${serverIp} secret="\${secret}" \\
+    authentication-port=1812 accounting-port=1813 timeout=3000ms comment="Billing-FreeRADIUS-\${nasId}"
+
+# 2. Enable CoA / Packet of Disconnect Listener (Port 3799)
+/radius incoming
+set accept=yes port=3799
+
+# 3. Configure Hotspot Profile for RADIUS
+/ip hotspot profile
+set [find] use-radius=yes radius-accounting=yes radius-interim-update=1m login-by=http-pap,http-chap nas-port-type=wireless-802.11
+
+# 4. Add Billing Server to Walled Garden
+/ip hotspot walled-garden ip
+add action=accept dst-address=\${serverIp} comment="Allow Captive Portal & Billing Server"
+/ip hotspot walled-garden
+add dst-host=\${serverIp} comment="Allow Captive Portal Host"
+
+# 5. Automatically Fetch and Install Captive Portal login.html
+/tool fetch url="http://\${serverIp}:3000/mikrotik/login.html" dst-path="hotspot/login.html" mode=http
+/tool fetch url="http://\${serverIp}:3000/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=http`
+        .replace(/\\\${serverIp}/g, serverIp)
+        .replace(/\\\${secret}/g, secret)
+        .replace(/\\\${nasId}/g, nasId);
+
+      document.getElementById('wizScriptCode').textContent = script;
+      document.getElementById('wizFetchCommand').textContent = 
+        `/tool fetch url="http://${serverIp}:3000/mikrotik/login.html" dst-path="hotspot/login.html" mode=http\n` +
+        `/tool fetch url="http://${serverIp}:3000/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=http`;
+    }
+
+    async function saveWizardRouter() {
+      const payload = {
+        name: document.getElementById('wizRouterName').value,
+        nasIdentifier: document.getElementById('wizNasId').value,
+        ipAddress: document.getElementById('wizRouterIp').value,
+        serverIp: document.getElementById('wizServerIp').value,
+        radiusSecret: document.getElementById('wizRadiusSecret').value,
+      };
+
+      const statusEl = document.getElementById('wizSaveStatus');
+      statusEl.textContent = 'Saving router...';
+
+      try {
+        const res = await fetch('/api/routers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.success) {
+          statusEl.textContent = '✓ Router saved into billing database!';
+          loadRouters();
+          setTimeout(() => { statusEl.textContent = ''; }, 4000);
+        } else {
+          statusEl.textContent = 'Error: ' + json.error;
+        }
+      } catch (err) {
+        statusEl.textContent = 'Failed to save router: ' + err.message;
+      }
+    }
+
+    async function testRadiusConnection() {
+      try {
+        const res = await fetch('/api/routers/test-radius', { method: 'POST' });
+        const json = await res.json();
+        alert((json.success ? '✅ ' : '❌ ') + json.message);
+      } catch (err) {
+        alert('Could not test RADIUS: ' + err.message);
+      }
+    }
+
+    async function loadRouters() {
+      try {
+        const res = await fetch('/api/routers');
+        const json = await res.json();
+        if (json.success && json.data) {
+          document.getElementById('metricOnlineRouters').textContent = json.data.length;
+          const rows = json.data.map(r => `
+            <tr>
+              <td><strong>${r.name}</strong></td>
+              <td><code>${r.nasIdentifier}</code></td>
+              <td>${r.ipAddress}</td>
+              <td>${r.locationName || 'HQ'}</td>
+              <td><code>${r.radiusSecret}</code></td>
+              <td>${r.activeClients} clients</td>
+              <td>
+                <button class="btn-action" onclick="fetchRouterScript('${r.id}')">Get Script</button>
+              </td>
+            </tr>
+          `).join('');
+
+          document.getElementById('routersFleetTable').innerHTML = rows || '<tr><td colspan="7">No routers onboarded yet.</td></tr>';
+          document.getElementById('overviewFleetTable').innerHTML = json.data.map(r => `
+            <tr>
+              <td><strong>${r.name}</strong></td>
+              <td><code>${r.nasIdentifier}</code></td>
+              <td>${r.ipAddress}</td>
+              <td>${r.activeClients}</td>
+              <td><span class="status-badge status-online">Online</span></td>
+              <td><button class="btn-action" onclick="fetchRouterScript('${r.id}')">Script</button></td>
+            </tr>
+          `).join('') || '<tr><td colspan="6">No routers.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Failed to load routers', err);
+      }
+    }
+
+    async function loadPlans() {
+      try {
+        const res = await fetch('/api/plans');
+        const json = await res.json();
+        if (json.success && json.data) {
+          document.getElementById('metricTotalPlans').textContent = json.data.length;
+          
+          // Table rows
+          const rows = json.data.map(p => `
+            <tr>
+              <td><strong>${p.name}</strong></td>
+              <td><span class="status-badge" style="background:#334155;">${p.planType}</span></td>
+              <td><strong>${p.currency} ${p.price}</strong></td>
+              <td>${Math.round(p.downloadSpeed / 1024)} Mbps / ${Math.round(p.uploadSpeed / 1024)} Mbps</td>
+              <td>${p.durationSec ? Math.round(p.durationSec / 3600) + ' Hours' : (p.dataLimitBytes ? (Math.round(Number(p.dataLimitBytes)/(1024*1024*1024)) + ' GB') : 'Unlimited')}</td>
+              <td>${p.maxDevices} Device(s)</td>
+              <td><span class="status-badge status-online">Active</span></td>
+            </tr>
+          `).join('');
+          document.getElementById('plansTableBody').innerHTML = rows || '<tr><td colspan="7">No plans configured.</td></tr>';
+
+          // Visual Cards
+          const cardsHtml = json.data.map(p => `
+            <div style="background: #0B0F19; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; color: var(--text);">${p.name}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                  <span style="background: rgba(16, 185, 129, 0.2); color: var(--primary); font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                    ${Math.round(p.downloadSpeed / 1024)} Mbps
+                  </span>
+                  <span style="background: #334155; color: #F8FAFC; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
+                    ${p.durationSec ? Math.round(p.durationSec / 3600) + 'h' : 'Data'}
+                  </span>
+                  <span style="background: #334155; color: #F8FAFC; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
+                    ${p.maxDevices} Dev
+                  </span>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(51, 65, 85, 0.5); padding-top: 10px;">
+                <span style="font-weight: 800; font-size: 18px; color: var(--primary);">${p.currency} ${p.price}</span>
+                <span class="status-badge status-online">Live on Portal</span>
+              </div>
+            </div>
+          `).join('');
+
+          const overviewGrid = document.getElementById('overviewPlansGrid');
+          if (overviewGrid) overviewGrid.innerHTML = cardsHtml || '<div style="color:var(--text-muted)">No packages active.</div>';
+
+          const plansGrid = document.getElementById('plansVisualGrid');
+          if (plansGrid) plansGrid.innerHTML = cardsHtml || '<div style="color:var(--text-muted)">No packages active.</div>';
+        }
+      } catch (err) {
+        console.error('Failed to load plans', err);
+      }
+    }
+
+    async function loadSessions() {
+      try {
+        const res = await fetch('/api/sessions');
+        const json = await res.json();
+        if (json.success && json.data) {
+          document.getElementById('metricActiveDevices').textContent = json.data.length;
+          const rows = json.data.map(s => `
+            <tr>
+              <td><strong>${s.username}</strong></td>
+              <td>${s.clientIp}</td>
+              <td><code>${s.macAddress}</code></td>
+              <td>${s.nasIp}</td>
+              <td>${Math.round(Number(s.downloadBytes)/(1024*1024))} MB / ${Math.round(Number(s.uploadBytes)/(1024*1024))} MB</td>
+              <td>${s.startTime ? new Date(s.startTime).toLocaleTimeString() : 'Just now'}</td>
+              <td>
+                <button class="btn-kick" onclick="disconnectClient('${s.username}', '${s.clientIp}', '${s.nasIp}')">Disconnect</button>
+              </td>
+            </tr>
+          `).join('');
+          document.getElementById('sessionsTableBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">No active sessions currently connected.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Failed to load sessions', err);
+      }
+    }
+
+    async function fetchRouterScript(routerId) {
+      try {
+        const sIp = document.getElementById('wizServerIp')?.value || '169.58.96.131';
+        const res = await fetch('/api/routers/' + routerId + '/script?serverIp=' + sIp);
+        const json = await res.json();
+        if (json.success) {
+          document.getElementById('scriptPre').innerText = json.data.scripts.routeros;
+          document.getElementById('htmlPre').innerText = json.data.scripts.captivePortalHtml;
+          openModal('scriptResultModal');
+        }
+      } catch (err) {
+        alert('Could not fetch router script');
+      }
+    }
+
+    async function handleCreatePlan(e) {
+      e.preventDefault();
+      const hours = Number(document.getElementById('plDurationHours').value) || 1;
+      const payload = {
+        name: document.getElementById('plName').value,
+        price: Number(document.getElementById('plPrice').value),
+        planType: document.getElementById('plType').value,
+        durationSec: hours * 3600,
+        downloadSpeed: Number(document.getElementById('plDownMbps').value) * 1024,
+        uploadSpeed: Number(document.getElementById('plUpMbps').value) * 1024,
+        maxDevices: 1,
+      };
+
+      try {
+        const res = await fetch('/api/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal('planModal');
+          loadPlans();
+          alert('Package created and live in Captive Portal!');
+        } else {
+          alert('Error: ' + JSON.stringify(json.error));
+        }
+      } catch (err) {
+        alert('Failed to create package: ' + err.message);
+      }
+    }
+
+    async function disconnectClient(username, clientIp, nasIp) {
+      if (!confirm(`Disconnect client ${username} (${clientIp})?`)) return;
+      try {
+        await fetch('/api/sessions/disconnect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, clientIp, nasIp }),
+        });
+        alert('Disconnect-Request (PoD) sent to router port 3799');
+        loadSessions();
+      } catch (err) {
+        alert('Disconnect failed');
+      }
+    }
+
+    // Auto-load initial data
+    loadRouters();
+    loadPlans();
+    loadSessions();
+    updateLiveScript();
+  </script>
 </body>
 </html>
+

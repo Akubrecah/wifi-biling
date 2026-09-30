@@ -1,8 +1,9 @@
 FROM freeradius/freeradius-server:3.2.3-alpine
 
-# Install postgresql module for freeradius
+# Install postgresql module and CLI utilities for freeradius
 RUN apk add --no-cache \
     freeradius-postgresql \
+    freeradius-utils \
     postgresql-client
 
 # Copy custom configurations

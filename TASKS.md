@@ -9,12 +9,12 @@
 | **Slice 1** | Foundation Scaffolding & Multi-Container Docker Orchestration | 🟢 COMPLETED |
 | **Slice 2** | Database Schema, Prisma Migrations & Seed Data | 🟢 COMPLETED |
 | **Slice 3** | Core Domain Business Logic & Unit Test Suite | 🟢 COMPLETED |
-| **Slice 4** | M-Pesa Daraja Engine (STK Push, Webhook, Idempotency, Ledger) | ⚪ BACKLOG |
-| **Slice 5** | FreeRADIUS (rlm_sql) & MikroTik RouterOS Gateway Controller | ⚪ BACKLOG |
+| **Slice 4** | M-Pesa Daraja Engine (STK Push, Webhook, Idempotency, Ledger) | 🟡 IN PROGRESS |
+| **Slice 5** | FreeRADIUS (rlm_sql) & MikroTik RouterOS Gateway Controller | 🟢 COMPLETED |
 | **Slice 6** | Session Accounting, Quota Enforcer & BullMQ Expiry Watchdog | ⚪ BACKLOG |
-| **Slice 7** | Mobile-First Captive Portal (Plan Selection, STK Polling, Status) | ⚪ BACKLOG |
+| **Slice 7** | Mobile-First Captive Portal (Plan Selection, STK Polling, Status) | 🟢 COMPLETED |
 | **Slice 8** | Voucher Management System (Bulk Generator, PDF/CSV, Redemptions) | ⚪ BACKLOG |
-| **Slice 9** | Admin Management Platform, RBAC & Financial Analytics | ⚪ BACKLOG |
+| **Slice 9** | Admin Management Platform, RBAC & Financial Analytics | 🟢 COMPLETED |
 | **Slice 10** | End-to-End Verification, Security Hardening & Documentation | ⚪ BACKLOG |
 
 ---

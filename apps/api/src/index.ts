@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import { prisma } from '@wifi-billing/database';
 import { errorHandler } from './plugins/error-handler.js';
 import { healthRoutes } from './routes/health.js';
+import { planRoutes } from './routes/plans.js';
+import { routerRoutes } from './routes/routers.js';
+import { sessionRoutes } from './routes/sessions.js';
 
 dotenv.config();
 
@@ -43,6 +46,9 @@ export async function buildApp() {
 
   // Register Routes
   await fastify.register(healthRoutes, { prefix: '/api' });
+  await fastify.register(planRoutes, { prefix: '/api' });
+  await fastify.register(routerRoutes, { prefix: '/api' });
+  await fastify.register(sessionRoutes, { prefix: '/api' });
   await fastify.register(healthRoutes); // root /health and /ready fallback
 
   return fastify;
