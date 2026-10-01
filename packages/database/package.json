@@ -8,7 +8,7 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
-    "seed": "node --loader ts-node/esm src/seed.ts",
+    "seed": "tsc && node dist/seed.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
