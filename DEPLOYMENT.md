@@ -12,10 +12,9 @@ This guide walks you through deploying the complete WiFi Billing stack onto a fr
 * **RAM**: 2 GB (4 GB recommended for high concurrent sessions)
 * **Disk**: 25 GB SSD / NVMe
 * **OS**: Ubuntu 22.04 LTS or 24.04 LTS
-* **Network**: 1 Static Public IPv4 Address
+* **Network**: 1 Static Public IPv4 Address (`169.58.96.131`)
 * **Domain / DNS**:
-  - `billing.yourdomain.com` (pointing to VPS Public IP) OR
-  - `portal.yourdomain.com` (pointing to VPS Public IP)
+  - `billing.vybeafrica.org` (DNS `A` Record pointing to `169.58.96.131`)
 
 ---
 
@@ -23,7 +22,7 @@ This guide walks you through deploying the complete WiFi Billing stack onto a fr
 
 Connect to your VPS via SSH as root:
 ```bash
-ssh root@<YOUR_VPS_PUBLIC_IP>
+ssh root@169.58.96.131
 ```
 
 ### 2.1 Update System & Install Dependencies
@@ -41,6 +40,7 @@ ufw allow 22/tcp
 # Allow Web Traffic (Captive Portal, API, Admin)
 ufw allow 80/tcp
 ufw allow 443/tcp
+ufw allow 3001/tcp comment 'API Gateway'
 
 # Allow RADIUS Authentication & Accounting from MikroTik Router(s)
 ufw allow 1812/udp comment 'RADIUS Authentication'
@@ -85,18 +85,17 @@ docker compose version
 
 ## 4. Obtain SSL / TLS Certificates (Let's Encrypt)
 
-Stop any service using port 80 temporarily and generate certificates for your domain:
+Stop any service using port 80 temporarily and generate certificates for `billing.vybeafrica.org`:
 ```bash
-# Replace billing.yourdomain.com with your real domain
-export DOMAIN="billing.yourdomain.com"
-export EMAIL="admin@yourdomain.com"
+export DOMAIN="billing.vybeafrica.org"
+export EMAIL="admin@vybeafrica.org"
 
 certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m $EMAIL
 ```
 
 Your certificates will be stored in:
-`/etc/letsencrypt/live/$DOMAIN/fullchain.pem`
-`/etc/letsencrypt/live/$DOMAIN/privkey.pem`
+`/etc/letsencrypt/live/billing.vybeafrica.org/fullchain.pem`
+`/etc/letsencrypt/live/billing.vybeafrica.org/privkey.pem`
 
 ---
 
@@ -152,10 +151,10 @@ MPESA_CONSUMER_KEY=YOUR_PRODUCTION_CONSUMER_KEY
 MPESA_CONSUMER_SECRET=YOUR_PRODUCTION_CONSUMER_SECRET
 MPESA_PASSKEY=YOUR_PRODUCTION_LIPA_NA_MPESA_PASSKEY
 MPESA_SHORTCODE=YOUR_PAYBILL_OR_TILL_NUMBER
-MPESA_CALLBACK_URL=https://billing.yourdomain.com/api/webhooks/mpesa
+MPESA_CALLBACK_URL=https://billing.vybeafrica.org/api/webhooks/mpesa
 
 # Primary MikroTik Gateway
-MIKROTIK_HOST=ROUTER_IP_OR_VPN_IP
+MIKROTIK_HOST=192.168.88.1
 MIKROTIK_API_PORT=8729
 MIKROTIK_USERNAME=api_billing
 MIKROTIK_PASSWORD=SECURE_ROUTER_API_PASSWORD
@@ -165,7 +164,7 @@ MIKROTIK_PASSWORD=SECURE_ROUTER_API_PASSWORD
 
 ## 6. Configure Production Nginx with SSL
 
-Create or update `/opt/wifi-billing/infrastructure/docker/nginx/nginx.prod.conf`:
+Create or update `/opt/wifi-billing/infrastructure/docker/nginx/nginx.conf`:
 
 ```nginx
 events {
@@ -195,17 +194,17 @@ http {
     # Redirect HTTP to HTTPS
     server {
         listen 80;
-        server_name _;
+        server_name billing.vybeafrica.org;
         return 301 https://$host$request_uri;
     }
 
     # Production HTTPS Server
     server {
         listen 443 ssl http2;
-        server_name _;
+        server_name billing.vybeafrica.org;
 
-        ssl_certificate /etc/letsencrypt/live/YOUR_DOMAIN/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/YOUR_DOMAIN/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/billing.vybeafrica.org/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/billing.vybeafrica.org/privkey.pem;
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_ciphers HIGH:!aNULL:!MD5;
         ssl_prefer_server_ciphers on;

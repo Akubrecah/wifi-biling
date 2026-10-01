@@ -29,15 +29,16 @@ This guide provides the complete, production-ready configuration for your **Mikr
 ```
 
 ### Key Values for Your Setup:
+* **Subdomain / FQDN**: `billing.vybeafrica.org`
 * **VPS Public IP**: `169.58.96.131`
-* **Vercel Host**: `*.vercel.app` (or your custom domain e.g. `wifi.yourdomain.com`)
+* **Vercel Host**: `billing.vybeafrica.org` / `*.vercel.app`
 * **RADIUS Shared Secret**: Must match `RADIUS_SECRET` in your VPS `.env`
 * **Hotspot IP Pool**: `192.168.88.0/24` (or your existing LAN/VLAN)
 * **Router API Password**: Must match `MIKROTIK_PASSWORD` in your VPS `.env`
 
 ---
 
-## 2. Fast 1-Click RouterOS CLI Script (Configured for VPS 169.58.96.131 & Vercel)
+## 2. Fast 1-Click RouterOS CLI Script (Configured for billing.vybeafrica.org & VPS 169.58.96.131)
 
 Open **Winbox** -> **Terminal** or SSH into your MikroTik router and run the following commands (replace `<YOUR_RADIUS_SECRET>` with the secret in your `.env`):
 
@@ -65,11 +66,13 @@ set [find] use-radius=yes radius-accounting=yes radius-interim-update=1m \
 # ==============================================================================
 # 3. CONFIGURE WALLED GARDEN (Zero-Rated Access Before Payment)
 # ==============================================================================
-# 3.1 Allow Billing VPS Server & Vercel Frontend
+# 3.1 Allow Billing VPS Server & VybeAfrica Domain
 /ip hotspot walled-garden ip
 add action=accept dst-address=169.58.96.131 comment="Allow VPS Billing & API Backend"
 
 /ip hotspot walled-garden
+add dst-host=billing.vybeafrica.org comment="Allow Primary Billing Subdomain"
+add dst-host=*.vybeafrica.org comment="Allow VybeAfrica Wildcard"
 add dst-host=*.vercel.app comment="Allow Vercel Hosted Frontends"
 add dst-host=cname.vercel-dns.com comment="Allow Vercel DNS"
 
@@ -117,18 +120,18 @@ The MikroTik router needs a custom `login.html` file that immediately forwards g
 Run this directly in MikroTik Terminal:
 ```routeros
 # For standard RouterBOARDs (stored in hotspot/)
-/tool fetch url="https://<VPS_DOMAIN>/mikrotik/login.html" dst-path="hotspot/login.html" mode=https
+/tool fetch url="https://billing.vybeafrica.org/mikrotik/login.html" dst-path="hotspot/login.html" mode=https
 
 # For Flash-based RouterBOARDs (stored in flash/hotspot/)
-/tool fetch url="https://<VPS_DOMAIN>/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=https
+/tool fetch url="https://billing.vybeafrica.org/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=https
 ```
 
 ---
 
 ### Option B: Manual Upload via Winbox / WebFig
 
-1. Download `login.html` from your VPS portal:
-   `https://<VPS_DOMAIN>/download/login.html`
+1. Download `login.html` from your portal:
+   `https://billing.vybeafrica.org/download/login.html`
    Or save this snippet as `login.html` on your computer:
 ```html
 <!DOCTYPE html>
@@ -136,16 +139,16 @@ Run this directly in MikroTik Terminal:
 <head>
   <meta charset="utf-8">
   <title>FastNet Hotspot Portal</title>
-  <meta http-equiv="refresh" content="0; url=https://<VPS_DOMAIN>/hotspot?mac=$(mac)&ip=$(ip)&username=$(username)&link-login=$(link-login)&link-login-only=$(link-login-only)&link-orig=$(link-orig)&error=$(error)">
+  <meta http-equiv="refresh" content="0; url=https://billing.vybeafrica.org/hotspot?mac=$(mac)&ip=$(ip)&username=$(username)&link-login=$(link-login)&link-login-only=$(link-login-only)&link-orig=$(link-orig)&error=$(error)">
   <script type="text/javascript">
-    window.location.href = "https://<VPS_DOMAIN>/hotspot?mac=$(mac)&ip=$(ip)&username=$(username)&link-login=$(link-login)&link-login-only=$(link-login-only)&link-orig=$(link-orig)&error=$(error)";
+    window.location.href = "https://billing.vybeafrica.org/hotspot?mac=$(mac)&ip=$(ip)&username=$(username)&link-login=$(link-login)&link-login-only=$(link-login-only)&link-orig=$(link-orig)&error=$(error)";
   </script>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0F172A; color: #F8FAFC; text-align: center; padding-top: 60px;">
   <h2 style="margin-bottom: 8px;">FastNet High-Speed WiFi</h2>
   <p style="color: #94A3B8;">Redirecting to internet packages &amp; M-Pesa billing...</p>
   <p style="margin-top: 24px;">
-    <a href="https://<VPS_DOMAIN>/hotspot?mac=$(mac)&ip=$(ip)&link-login-only=$(link-login-only)" style="background: #10B981; color: #0F172A; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: inline-block;">
+    <a href="https://billing.vybeafrica.org/hotspot?mac=$(mac)&ip=$(ip)&link-login-only=$(link-login-only)" style="background: #10B981; color: #0F172A; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: inline-block;">
       Click here to select an internet package
     </a>
   </p>
