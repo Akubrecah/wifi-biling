@@ -85,15 +85,8 @@ add dst-host=api.safaricom.co.ke comment="Allow Safaricom API"
 add action=accept dst-address=196.201.214.0/24 comment="Allow Safaricom Direct IP Block 1"
 add action=accept dst-address=196.201.213.0/24 comment="Allow Safaricom Direct IP Block 2"
 
-# 3.3 Allow OS Captive Network Assistant (CNA) Detection Probes
-# This ensures iPhones, Androids, and Windows laptops automatically pop up the login window
-/ip hotspot walled-garden
-add dst-host=captive.apple.com comment="Apple CNA"
-add dst-host=*.apple.com comment="Apple Services"
-add dst-host=connectivitycheck.gstatic.com comment="Android CNA"
-add dst-host=clients3.google.com comment="Android CNA Fallback"
-add dst-host=*.gstatic.com comment="Google CNA"
-add dst-host=*.msftconnecttest.com comment="Windows CNA"
+# Note: Do NOT add captive.apple.com or connectivitycheck.gstatic.com to walled garden!
+# The router MUST intercept those probes to trigger the automatic payment pop-up.
 
 # ==============================================================================
 # 4. PROVISION DEDICATED BILLING API USER
