@@ -1,3 +1,12 @@
+import dotenv from 'dotenv';
+import path from 'node:path';
+
+// Automatically locate .env from workspace root or current dir
+dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
+dotenv.config({ path: '/opt/wifi-billing/.env' });
+
 import { PrismaClient, UserRole, PlanType } from '@prisma/client';
 import { hash, Algorithm } from '@node-rs/argon2';
 
