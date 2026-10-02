@@ -370,7 +370,16 @@
       font-size: 12px;
       overflow-x: auto;
       white-space: pre-wrap;
-      max-height: 250px;
+    @media print {
+      body * { visibility: hidden; }
+      #viewVouchersModal, #viewVouchersModal * { visibility: visible; }
+      #viewVouchersModal { position: absolute; left: 0; top: 0; width: 100%; display: block !important; background: #FFF !important; }
+      #viewVouchersModal .modal { max-width: 100% !important; background: #FFF !important; color: #000 !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+      #vouchersListContainer { max-height: none !important; overflow: visible !important; display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+      #vouchersListContainer > div { background: #FFF !important; border: 2px dashed #334155 !important; color: #000 !important; break-inside: avoid; page-break-inside: avoid; }
+      #vouchersListContainer span { color: #1E293B !important; }
+      #vouchersListContainer div { color: #000 !important; }
+      .modal-header button { display: none !important; }
     }
   </style>
 </head>
@@ -388,6 +397,7 @@
       <div class="nav-item" data-view="onboard" onclick="switchNav('onboard')">🚀 Onboard Router Wizard</div>
       <div class="nav-item" data-view="routers" onclick="switchNav('routers')">🌐 Router Gateways</div>
       <div class="nav-item" data-view="plans" onclick="switchNav('plans')">📦 Internet Packages</div>
+      <div class="nav-item" data-view="vouchers" onclick="switchNav('vouchers')">🎟️ Voucher System</div>
       <div class="nav-item" data-view="sessions" onclick="switchNav('sessions')">⚡ Live Sessions</div>
     </nav>
   </aside>
@@ -409,23 +419,33 @@
         <div class="metrics-grid">
           <div class="metric-card">
             <div class="metric-title">Today's Revenue</div>
-            <div class="metric-value">KES 18,450</div>
-            <div class="metric-trend">M-Pesa STK Active</div>
+            <div class="metric-value" id="metricTodayRevenue">KES 0</div>
+            <div class="metric-trend">M-Pesa Real-Time</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">7-Day Revenue</div>
+            <div class="metric-value" id="metricWeekRevenue">KES 0</div>
+            <div class="metric-trend">Settled Payments</div>
           </div>
           <div class="metric-card">
             <div class="metric-title">Active Devices</div>
             <div class="metric-value" id="metricActiveDevices">0</div>
-            <div class="metric-trend">RADIUS Sessions</div>
+            <div class="metric-trend">Online RADIUS Sessions</div>
           </div>
           <div class="metric-card">
             <div class="metric-title">Online Routers</div>
-            <div class="metric-value" id="metricOnlineRouters">1</div>
-            <div class="metric-trend">MikroTik RouterOS</div>
+            <div class="metric-value" id="metricOnlineRouters">0</div>
+            <div class="metric-trend">MikroTik Gateways</div>
           </div>
           <div class="metric-card">
-            <div class="metric-title">Total Plans</div>
-            <div class="metric-value" id="metricTotalPlans">7</div>
-            <div class="metric-trend">Bandwidth Packages</div>
+            <div class="metric-title">Active Packages</div>
+            <div class="metric-value" id="metricTotalPlans">0</div>
+            <div class="metric-trend">Bandwidth Tiers</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-title">Available Vouchers</div>
+            <div class="metric-value" id="metricAvailVouchers">0</div>
+            <div class="metric-trend" id="metricTotalVouchers">0 Total Generated</div>
           </div>
         </div>
 
@@ -647,10 +667,42 @@
                 <th>Validity / Quota</th>
                 <th>Max Devices</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="plansTableBody">
-              <tr><td colspan="7" style="text-align:center;">Loading packages...</td></tr>
+              <tr><td colspan="8" style="text-align:center;">Loading packages...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- View: Voucher System & Scratch Cards -->
+      <section id="view-vouchers" class="view-section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Voucher &amp; Scratch Card Management</div>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                Generate, export, and print prepaid voucher scratch cards for retail kiosks, shops, and offline sales.
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="openGenerateVoucherModal()">+ Generate Voucher Batch</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Batch Name</th>
+                <th>Package &amp; Value</th>
+                <th>Total Vouchers</th>
+                <th>Available</th>
+                <th>Used / Redeemed</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="voucherBatchesTableBody">
+              <tr><td colspan="7" style="text-align:center;">Loading voucher batches...</td></tr>
             </tbody>
           </table>
         </div>
@@ -761,6 +813,106 @@
     </div>
   </div>
 
+  <!-- Modal: Edit Plan -->
+  <div class="modal-overlay" id="editPlanModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">Edit Internet Package</h3>
+        <button class="btn-outline" style="padding: 4px 8px;" onclick="closeModal('editPlanModal')">&times;</button>
+      </div>
+      <form id="editPlanForm" onsubmit="handleUpdatePlan(event)">
+        <input type="hidden" id="editPlanId">
+        <div class="form-group">
+          <label>Package Name</label>
+          <input type="text" id="editPlanName" required>
+        </div>
+        <div class="form-group">
+          <label>Price (KES)</label>
+          <input type="number" id="editPlanPrice" required>
+        </div>
+        <div class="form-group">
+          <label>Description / Value Proposition</label>
+          <input type="text" id="editPlanDesc" placeholder="e.g. Smooth TikTok, Instagram & YouTube">
+        </div>
+        <div class="form-group">
+          <label>Package Type</label>
+          <select id="editPlanType">
+            <option value="TIME_BASED">Time-Based (Unlimited Data)</option>
+            <option value="HYBRID">Data-Capped (Quota)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Duration (Hours)</label>
+          <input type="number" id="editPlanDurationHours" placeholder="e.g. 2">
+        </div>
+        <div class="form-group">
+          <label>Download Speed (Mbps)</label>
+          <input type="number" id="editPlanDownMbps" required>
+        </div>
+        <div class="form-group">
+          <label>Upload Speed (Mbps)</label>
+          <input type="number" id="editPlanUpMbps" required>
+        </div>
+        <div class="form-group">
+          <label>Max Allowed Devices</label>
+          <input type="number" id="editPlanMaxDevices" value="1" min="1" max="10">
+        </div>
+        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('editPlanModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Package</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Generate Vouchers -->
+  <div class="modal-overlay" id="generateVoucherModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;">🎟️ Generate Voucher Batch</h3>
+        <button class="btn-outline" style="padding: 4px 8px;" onclick="closeModal('generateVoucherModal')">&times;</button>
+      </div>
+      <form id="voucherGenForm" onsubmit="handleGenerateVouchers(event)">
+        <div class="form-group">
+          <label>Batch Name / Purpose</label>
+          <input type="text" id="vgBatchName" placeholder="e.g. Kiosk Sales Batch #1 - 2 Hours" required>
+        </div>
+        <div class="form-group">
+          <label>Target Package</label>
+          <select id="vgPlanSelect" required>
+            <option value="">Loading packages...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantity of Vouchers (1 - 500)</label>
+          <input type="number" id="vgQuantity" min="1" max="500" value="20" required>
+        </div>
+        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('generateVoucherModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitVoucherGen">Generate Vouchers</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: View & Print Batch Vouchers -->
+  <div class="modal-overlay" id="viewVouchersModal">
+    <div class="modal" style="max-width: 840px;">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size: 18px;" id="batchModalTitle">Batch Vouchers</h3>
+          <p style="font-size: 12px; color: var(--text-muted);" id="batchModalSub">Ready for print or retail slip distribution</p>
+        </div>
+        <div style="display:flex; gap: 8px;">
+          <button class="btn btn-primary" onclick="printVouchers()">🖨️ Print Voucher Cards</button>
+          <button class="btn-outline" style="padding: 4px 8px;" onclick="closeModal('viewVouchersModal')">&times;</button>
+        </div>
+      </div>
+      <div id="vouchersListContainer" style="max-height: 60vh; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; padding: 10px 0;">
+      </div>
+    </div>
+  </div>
+
   <script>
     function switchNav(viewId) {
       document.querySelectorAll('.nav-item').forEach(el => {
@@ -772,8 +924,9 @@
 
       if (viewId === 'routers') loadRouters();
       if (viewId === 'plans') loadPlans();
+      if (viewId === 'vouchers') loadVouchers();
       if (viewId === 'sessions') loadSessions();
-      if (viewId === 'overview') { loadRouters(); loadPlans(); loadSessions(); }
+      if (viewId === 'overview') { loadMetrics(); loadRouters(); loadPlans(); loadSessions(); }
       if (viewId === 'onboard') updateLiveScript();
     }
 
@@ -791,6 +944,407 @@
 
     function downloadLoginHtml() {
       window.location.href = '/download/login.html';
+    }
+
+    // 1. Dynamic Real-Time Metrics (no hardcoded figures)
+    async function loadMetrics() {
+      try {
+        const res = await fetch('/api/metrics');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const d = json.data;
+          document.getElementById('metricTodayRevenue').textContent = 'KES ' + Number(d.todayRevenue).toLocaleString();
+          document.getElementById('metricWeekRevenue').textContent = 'KES ' + Number(d.weekRevenue).toLocaleString();
+          document.getElementById('metricActiveDevices').textContent = d.activeDevices;
+          document.getElementById('metricOnlineRouters').textContent = d.onlineRouters;
+          document.getElementById('metricTotalPlans').textContent = d.totalPlans;
+          document.getElementById('metricAvailVouchers').textContent = d.availableVouchers;
+          document.getElementById('metricTotalVouchers').textContent = d.totalVouchers + ' Total Generated';
+        }
+      } catch (err) {
+        console.warn('Could not load live metrics', err);
+      }
+    }
+
+    // 2. Package Management CRUD
+    async function loadPlans() {
+      try {
+        const res = await fetch('/api/plans?all=true');
+        const json = await res.json();
+        if (json.success && json.data) {
+          document.getElementById('metricTotalPlans').textContent = json.data.filter(p => p.isActive).length;
+          
+          // Table rows with Edit and Deactivate Actions
+          const rows = json.data.map(p => `
+            <tr>
+              <td><strong>${p.name}</strong></td>
+              <td><span class="status-badge" style="background:#334155;">${p.planType}</span></td>
+              <td><strong style="color:var(--primary);">${p.currency} ${p.price}</strong></td>
+              <td>${Math.round(p.downloadSpeed / 1024)} Mbps / ${Math.round(p.uploadSpeed / 1024)} Mbps</td>
+              <td>${p.durationSec ? (p.durationSec < 86400 ? Math.round(p.durationSec / 3600) + ' Hours' : Math.round(p.durationSec / 86400) + ' Days') : (p.dataLimitBytes ? (Math.round(Number(p.dataLimitBytes)/(1024*1024*1024)) + ' GB') : 'Unlimited')}</td>
+              <td>${p.maxDevices} Dev</td>
+              <td><span class="status-badge ${p.isActive ? 'status-online' : 'status-offline'}">${p.isActive ? 'Active' : 'Disabled'}</span></td>
+              <td style="display:flex; gap:6px;">
+                <button class="btn-action" onclick="openEditPlanModal('${p.id}')">Edit</button>
+                <button class="btn-outline" style="padding:4px 8px; font-size:11px;" onclick="togglePlanStatus('${p.id}')">
+                  ${p.isActive ? 'Disable' : 'Enable'}
+                </button>
+              </td>
+            </tr>
+          `).join('');
+          document.getElementById('plansTableBody').innerHTML = rows || '<tr><td colspan="8">No plans configured.</td></tr>';
+
+          // Visual Cards on Overview and Plans page
+          const activeOnly = json.data.filter(p => p.isActive);
+          const cardsHtml = activeOnly.map(p => `
+            <div style="background: #0B0F19; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; color: var(--text);">${p.name}</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${p.description || 'High-speed hotspot pass'}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                  <span style="background: rgba(16, 185, 129, 0.2); color: var(--primary); font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                    ${Math.round(p.downloadSpeed / 1024)} Mbps
+                  </span>
+                  <span style="background: #334155; color: #F8FAFC; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
+                    ${p.durationSec ? (p.durationSec < 86400 ? Math.round(p.durationSec / 3600) + 'h' : Math.round(p.durationSec / 86400) + 'd') : 'Data'}
+                  </span>
+                  <span style="background: #334155; color: #F8FAFC; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
+                    ${p.maxDevices} Dev
+                  </span>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(51, 65, 85, 0.5); padding-top: 10px;">
+                <span style="font-weight: 800; font-size: 18px; color: var(--primary);">${p.currency} ${p.price}</span>
+                <button class="btn-action" onclick="openEditPlanModal('${p.id}')">Edit Plan</button>
+              </div>
+            </div>
+          `).join('');
+
+          const overviewGrid = document.getElementById('overviewPlansGrid');
+          if (overviewGrid) overviewGrid.innerHTML = cardsHtml || '<div style="color:var(--text-muted)">No packages active.</div>';
+
+          const plansGrid = document.getElementById('plansVisualGrid');
+          if (plansGrid) plansGrid.innerHTML = cardsHtml || '<div style="color:var(--text-muted)">No packages active.</div>';
+        }
+      } catch (err) {
+        console.error('Failed to load plans', err);
+      }
+    }
+
+    async function openEditPlanModal(planId) {
+      try {
+        const res = await fetch('/api/plans/' + planId);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const p = json.data;
+          document.getElementById('editPlanId').value = p.id;
+          document.getElementById('editPlanName').value = p.name;
+          document.getElementById('editPlanPrice').value = p.price;
+          document.getElementById('editPlanDesc').value = p.description || '';
+          document.getElementById('editPlanType').value = p.planType;
+          document.getElementById('editPlanDurationHours').value = p.durationSec ? Math.round(p.durationSec / 3600) : 1;
+          document.getElementById('editPlanDownMbps').value = Math.round(p.downloadSpeed / 1024);
+          document.getElementById('editPlanUpMbps').value = Math.round(p.uploadSpeed / 1024);
+          document.getElementById('editPlanMaxDevices').value = p.maxDevices || 1;
+          openModal('editPlanModal');
+        }
+      } catch (err) {
+        alert('Could not fetch plan details: ' + err.message);
+      }
+    }
+
+    async function handleUpdatePlan(e) {
+      e.preventDefault();
+      const planId = document.getElementById('editPlanId').value;
+      const hours = Number(document.getElementById('editPlanDurationHours').value) || 1;
+      const payload = {
+        name: document.getElementById('editPlanName').value,
+        price: Number(document.getElementById('editPlanPrice').value),
+        description: document.getElementById('editPlanDesc').value,
+        planType: document.getElementById('editPlanType').value,
+        durationSec: hours * 3600,
+        downloadSpeed: Number(document.getElementById('editPlanDownMbps').value) * 1024,
+        uploadSpeed: Number(document.getElementById('editPlanUpMbps').value) * 1024,
+        maxDevices: Number(document.getElementById('editPlanMaxDevices').value) || 1,
+      };
+
+      try {
+        const res = await fetch('/api/plans/' + planId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal('editPlanModal');
+          loadPlans();
+          loadMetrics();
+          alert('Package updated successfully! Changes are live on Captive Portal.');
+        } else {
+          alert('Error: ' + JSON.stringify(json.error));
+        }
+      } catch (err) {
+        alert('Failed to update package: ' + err.message);
+      }
+    }
+
+    async function togglePlanStatus(planId) {
+      try {
+        const res = await fetch('/api/plans/' + planId + '/toggle', { method: 'PATCH' });
+        const json = await res.json();
+        if (json.success) {
+          loadPlans();
+          loadMetrics();
+        }
+      } catch (err) {
+        alert('Failed to toggle status');
+      }
+    }
+
+    // 3. Voucher System & Scratch Cards
+    async function loadVouchers() {
+      try {
+        const res = await fetch('/api/vouchers/batches');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const rows = json.data.map(b => `
+            <tr>
+              <td><strong>${b.name}</strong></td>
+              <td>${b.plan.name} (KES ${b.plan.price})</td>
+              <td><strong>${b.quantity}</strong> cards</td>
+              <td><span class="status-badge status-online">${b.available} Available</span></td>
+              <td><span class="status-badge" style="background:#334155;">${b.used} Used</span></td>
+              <td>${new Date(b.createdAt).toLocaleDateString()}</td>
+              <td>
+                <button class="btn-action" onclick="viewBatchVouchers('${b.id}')">🖨️ View &amp; Print Slips</button>
+              </td>
+            </tr>
+          `).join('');
+          document.getElementById('voucherBatchesTableBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">No voucher batches created yet. Click "+ Generate Voucher Batch" above.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Failed to load vouchers', err);
+      }
+    }
+
+    async function openGenerateVoucherModal() {
+      try {
+        const res = await fetch('/api/plans');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const select = document.getElementById('vgPlanSelect');
+          select.innerHTML = json.data.map(p => `
+            <option value="${p.id}">${p.name} - KES ${p.price} (${Math.round(p.downloadSpeed/1024)} Mbps)</option>
+          `).join('');
+          openModal('generateVoucherModal');
+        }
+      } catch (err) {
+        alert('Could not load packages for vouchers');
+      }
+    }
+
+    async function handleGenerateVouchers(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitVoucherGen');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      const payload = {
+        batchName: document.getElementById('vgBatchName').value,
+        planId: document.getElementById('vgPlanSelect').value,
+        quantity: Number(document.getElementById('vgQuantity').value) || 20,
+      };
+
+      try {
+        const res = await fetch('/api/vouchers/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        btn.disabled = false;
+        btn.textContent = 'Generate Vouchers';
+
+        if (json.success) {
+          closeModal('generateVoucherModal');
+          loadVouchers();
+          loadMetrics();
+          viewBatchVouchers(json.data.batchId);
+        } else {
+          alert('Error: ' + json.error);
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Generate Vouchers';
+        alert('Failed to generate vouchers: ' + err.message);
+      }
+    }
+
+    async function viewBatchVouchers(batchId) {
+      try {
+        const res = await fetch('/api/vouchers/batches/' + batchId);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const b = json.data;
+          document.getElementById('batchModalTitle').textContent = `Batch: ${b.name} (${b.vouchers.length} Cards)`;
+          document.getElementById('batchModalSub').textContent = `${b.plan.name} • KES ${b.plan.price} • ${Math.round(b.plan.downloadSpeed/1024)} Mbps High Speed WiFi`;
+
+          const cardsHtml = b.vouchers.map((v, i) => `
+            <div style="background:#0F172A; border:1px solid #334155; border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; color:#94A3B8;">
+                <span>FastNet Hotspot</span>
+                <span style="font-weight:700; color:#38BDF8;">#${i + 1}</span>
+              </div>
+              <div style="font-size:18px; font-weight:800; letter-spacing:2px; color:#10B981; font-family:monospace; text-align:center; padding:6px 0; background:#020617; border-radius:6px; border:1px solid #1E293B;">
+                ${v.code}
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:600;">
+                <span style="color:#F8FAFC;">${b.plan.name}</span>
+                <span style="color:#10B981;">KES ${b.plan.price}</span>
+              </div>
+              <div style="font-size:10px; color:#64748B; text-align:center;">
+                ${v.status === 'AVAILABLE' ? '✓ Ready to use' : 'Claimed: ' + (v.claimedMac || 'Used')}
+              </div>
+            </div>
+          `).join('');
+
+          document.getElementById('vouchersListContainer').innerHTML = cardsHtml;
+          openModal('viewVouchersModal');
+        }
+      } catch (err) {
+        alert('Could not load batch vouchers');
+      }
+    }
+
+    function printVouchers() {
+      window.print();
+    }
+
+    // 4. Live Sessions & Routers
+    async function loadSessions() {
+      try {
+        const res = await fetch('/api/sessions');
+        const json = await res.json();
+        if (json.success && json.data) {
+          document.getElementById('metricActiveDevices').textContent = json.data.length;
+          const rows = json.data.map(s => `
+            <tr>
+              <td><strong>${s.username}</strong></td>
+              <td>${s.clientIp}</td>
+              <td><code>${s.macAddress}</code></td>
+              <td>${s.nasIp}</td>
+              <td>${Math.round(Number(s.downloadBytes)/(1024*1024))} MB / ${Math.round(Number(s.uploadBytes)/(1024*1024))} MB</td>
+              <td>${s.startTime ? new Date(s.startTime).toLocaleTimeString() : 'Just now'}</td>
+              <td>
+                <button class="btn-kick" onclick="disconnectClient('${s.username}', '${s.clientIp}', '${s.nasIp}')">Disconnect</button>
+              </td>
+            </tr>
+          `).join('');
+          document.getElementById('sessionsTableBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">No active sessions currently connected.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Failed to load sessions', err);
+      }
+    }
+
+    async function loadRouters() {
+      try {
+        const res = await fetch('/api/routers');
+        const json = await res.json();
+        if (json.success && json.data) {
+          document.getElementById('metricOnlineRouters').textContent = json.data.length;
+          const rows = json.data.map(r => `
+            <tr>
+              <td><strong>${r.name}</strong></td>
+              <td><code>${r.nasIdentifier}</code></td>
+              <td>${r.ipAddress}</td>
+              <td>${r.locationName || 'HQ'}</td>
+              <td><code>${r.radiusSecret}</code></td>
+              <td>${r.activeClients} clients</td>
+              <td>
+                <button class="btn-action" onclick="fetchRouterScript('${r.id}')">Get Script</button>
+              </td>
+            </tr>
+          `).join('');
+
+          document.getElementById('routersFleetTable').innerHTML = rows || '<tr><td colspan="7">No routers onboarded yet.</td></tr>';
+          document.getElementById('overviewFleetTable').innerHTML = json.data.map(r => `
+            <tr>
+              <td><strong>${r.name}</strong></td>
+              <td><code>${r.nasIdentifier}</code></td>
+              <td>${r.ipAddress}</td>
+              <td>${r.activeClients}</td>
+              <td><span class="status-badge status-online">Online</span></td>
+              <td><button class="btn-action" onclick="fetchRouterScript('${r.id}')">Script</button></td>
+            </tr>
+          `).join('') || '<tr><td colspan="6">No routers.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Failed to load routers', err);
+      }
+    }
+
+    async function fetchRouterScript(routerId) {
+      try {
+        const sIp = document.getElementById('wizServerIp')?.value || '169.58.96.131';
+        const res = await fetch('/api/routers/' + routerId + '/script?serverIp=' + sIp);
+        const json = await res.json();
+        if (json.success) {
+          document.getElementById('scriptPre').innerText = json.data.scripts.routeros;
+          document.getElementById('htmlPre').innerText = json.data.scripts.captivePortalHtml;
+          openModal('scriptResultModal');
+        }
+      } catch (err) {
+        alert('Could not fetch router script');
+      }
+    }
+
+    async function handleCreatePlan(e) {
+      e.preventDefault();
+      const hours = Number(document.getElementById('plDurationHours').value) || 1;
+      const payload = {
+        name: document.getElementById('plName').value,
+        price: Number(document.getElementById('plPrice').value),
+        planType: document.getElementById('plType').value,
+        durationSec: hours * 3600,
+        downloadSpeed: Number(document.getElementById('plDownMbps').value) * 1024,
+        uploadSpeed: Number(document.getElementById('plUpMbps').value) * 1024,
+        maxDevices: 1,
+      };
+
+      try {
+        const res = await fetch('/api/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal('planModal');
+          loadPlans();
+          loadMetrics();
+          alert('Package created and live in Captive Portal!');
+        } else {
+          alert('Error: ' + JSON.stringify(json.error));
+        }
+      } catch (err) {
+        alert('Failed to create package: ' + err.message);
+      }
+    }
+
+    async function disconnectClient(username, clientIp, nasIp) {
+      if (!confirm(`Disconnect client ${username} (${clientIp})?`)) return;
+      try {
+        await fetch('/api/sessions/disconnect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, clientIp, nasIp }),
+        });
+        alert('Disconnect-Request (PoD) sent to router port 3799');
+        loadSessions();
+      } catch (err) {
+        alert('Disconnect failed');
+      }
     }
 
     function updateLiveScript() {
@@ -820,16 +1374,16 @@ add action=accept dst-address=\${serverIp} comment="Allow Captive Portal & Billi
 add dst-host=\${serverIp} comment="Allow Captive Portal Host"
 
 # 5. Automatically Fetch and Install Captive Portal login.html
-/tool fetch url="http://\${serverIp}:3000/mikrotik/login.html" dst-path="hotspot/login.html" mode=http
-/tool fetch url="http://\${serverIp}:3000/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=http`
+/tool fetch url="https://billing.vybeafrica.org/mikrotik/login.html" dst-path="hotspot/login.html" mode=https
+/tool fetch url="https://billing.vybeafrica.org/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=https`
         .replace(/\\\${serverIp}/g, serverIp)
         .replace(/\\\${secret}/g, secret)
         .replace(/\\\${nasId}/g, nasId);
 
       document.getElementById('wizScriptCode').textContent = script;
       document.getElementById('wizFetchCommand').textContent = 
-        `/tool fetch url="http://${serverIp}:3000/mikrotik/login.html" dst-path="hotspot/login.html" mode=http\n` +
-        `/tool fetch url="http://${serverIp}:3000/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=http`;
+        `/tool fetch url="https://billing.vybeafrica.org/mikrotik/login.html" dst-path="hotspot/login.html" mode=https\n` +
+        `/tool fetch url="https://billing.vybeafrica.org/mikrotik/login.html" dst-path="flash/hotspot/login.html" mode=https`;
     }
 
     async function saveWizardRouter() {
@@ -873,192 +1427,16 @@ add dst-host=\${serverIp} comment="Allow Captive Portal Host"
       }
     }
 
-    async function loadRouters() {
-      try {
-        const res = await fetch('/api/routers');
-        const json = await res.json();
-        if (json.success && json.data) {
-          document.getElementById('metricOnlineRouters').textContent = json.data.length;
-          const rows = json.data.map(r => `
-            <tr>
-              <td><strong>${r.name}</strong></td>
-              <td><code>${r.nasIdentifier}</code></td>
-              <td>${r.ipAddress}</td>
-              <td>${r.locationName || 'HQ'}</td>
-              <td><code>${r.radiusSecret}</code></td>
-              <td>${r.activeClients} clients</td>
-              <td>
-                <button class="btn-action" onclick="fetchRouterScript('${r.id}')">Get Script</button>
-              </td>
-            </tr>
-          `).join('');
-
-          document.getElementById('routersFleetTable').innerHTML = rows || '<tr><td colspan="7">No routers onboarded yet.</td></tr>';
-          document.getElementById('overviewFleetTable').innerHTML = json.data.map(r => `
-            <tr>
-              <td><strong>${r.name}</strong></td>
-              <td><code>${r.nasIdentifier}</code></td>
-              <td>${r.ipAddress}</td>
-              <td>${r.activeClients}</td>
-              <td><span class="status-badge status-online">Online</span></td>
-              <td><button class="btn-action" onclick="fetchRouterScript('${r.id}')">Script</button></td>
-            </tr>
-          `).join('') || '<tr><td colspan="6">No routers.</td></tr>';
-        }
-      } catch (err) {
-        console.error('Failed to load routers', err);
-      }
-    }
-
-    async function loadPlans() {
-      try {
-        const res = await fetch('/api/plans');
-        const json = await res.json();
-        if (json.success && json.data) {
-          document.getElementById('metricTotalPlans').textContent = json.data.length;
-          
-          // Table rows
-          const rows = json.data.map(p => `
-            <tr>
-              <td><strong>${p.name}</strong></td>
-              <td><span class="status-badge" style="background:#334155;">${p.planType}</span></td>
-              <td><strong>${p.currency} ${p.price}</strong></td>
-              <td>${Math.round(p.downloadSpeed / 1024)} Mbps / ${Math.round(p.uploadSpeed / 1024)} Mbps</td>
-              <td>${p.durationSec ? Math.round(p.durationSec / 3600) + ' Hours' : (p.dataLimitBytes ? (Math.round(Number(p.dataLimitBytes)/(1024*1024*1024)) + ' GB') : 'Unlimited')}</td>
-              <td>${p.maxDevices} Device(s)</td>
-              <td><span class="status-badge status-online">Active</span></td>
-            </tr>
-          `).join('');
-          document.getElementById('plansTableBody').innerHTML = rows || '<tr><td colspan="7">No plans configured.</td></tr>';
-
-          // Visual Cards
-          const cardsHtml = json.data.map(p => `
-            <div style="background: #0B0F19; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
-              <div>
-                <div style="font-weight: 700; font-size: 15px; color: var(--text);">${p.name}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                  <span style="background: rgba(16, 185, 129, 0.2); color: var(--primary); font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
-                    ${Math.round(p.downloadSpeed / 1024)} Mbps
-                  </span>
-                  <span style="background: #334155; color: #F8FAFC; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
-                    ${p.durationSec ? Math.round(p.durationSec / 3600) + 'h' : 'Data'}
-                  </span>
-                  <span style="background: #334155; color: #F8FAFC; font-size: 11px; padding: 2px 6px; border-radius: 4px;">
-                    ${p.maxDevices} Dev
-                  </span>
-                </div>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(51, 65, 85, 0.5); padding-top: 10px;">
-                <span style="font-weight: 800; font-size: 18px; color: var(--primary);">${p.currency} ${p.price}</span>
-                <span class="status-badge status-online">Live on Portal</span>
-              </div>
-            </div>
-          `).join('');
-
-          const overviewGrid = document.getElementById('overviewPlansGrid');
-          if (overviewGrid) overviewGrid.innerHTML = cardsHtml || '<div style="color:var(--text-muted)">No packages active.</div>';
-
-          const plansGrid = document.getElementById('plansVisualGrid');
-          if (plansGrid) plansGrid.innerHTML = cardsHtml || '<div style="color:var(--text-muted)">No packages active.</div>';
-        }
-      } catch (err) {
-        console.error('Failed to load plans', err);
-      }
-    }
-
-    async function loadSessions() {
-      try {
-        const res = await fetch('/api/sessions');
-        const json = await res.json();
-        if (json.success && json.data) {
-          document.getElementById('metricActiveDevices').textContent = json.data.length;
-          const rows = json.data.map(s => `
-            <tr>
-              <td><strong>${s.username}</strong></td>
-              <td>${s.clientIp}</td>
-              <td><code>${s.macAddress}</code></td>
-              <td>${s.nasIp}</td>
-              <td>${Math.round(Number(s.downloadBytes)/(1024*1024))} MB / ${Math.round(Number(s.uploadBytes)/(1024*1024))} MB</td>
-              <td>${s.startTime ? new Date(s.startTime).toLocaleTimeString() : 'Just now'}</td>
-              <td>
-                <button class="btn-kick" onclick="disconnectClient('${s.username}', '${s.clientIp}', '${s.nasIp}')">Disconnect</button>
-              </td>
-            </tr>
-          `).join('');
-          document.getElementById('sessionsTableBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;">No active sessions currently connected.</td></tr>';
-        }
-      } catch (err) {
-        console.error('Failed to load sessions', err);
-      }
-    }
-
-    async function fetchRouterScript(routerId) {
-      try {
-        const sIp = document.getElementById('wizServerIp')?.value || '169.58.96.131';
-        const res = await fetch('/api/routers/' + routerId + '/script?serverIp=' + sIp);
-        const json = await res.json();
-        if (json.success) {
-          document.getElementById('scriptPre').innerText = json.data.scripts.routeros;
-          document.getElementById('htmlPre').innerText = json.data.scripts.captivePortalHtml;
-          openModal('scriptResultModal');
-        }
-      } catch (err) {
-        alert('Could not fetch router script');
-      }
-    }
-
-    async function handleCreatePlan(e) {
-      e.preventDefault();
-      const hours = Number(document.getElementById('plDurationHours').value) || 1;
-      const payload = {
-        name: document.getElementById('plName').value,
-        price: Number(document.getElementById('plPrice').value),
-        planType: document.getElementById('plType').value,
-        durationSec: hours * 3600,
-        downloadSpeed: Number(document.getElementById('plDownMbps').value) * 1024,
-        uploadSpeed: Number(document.getElementById('plUpMbps').value) * 1024,
-        maxDevices: 1,
-      };
-
-      try {
-        const res = await fetch('/api/plans', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const json = await res.json();
-        if (json.success) {
-          closeModal('planModal');
-          loadPlans();
-          alert('Package created and live in Captive Portal!');
-        } else {
-          alert('Error: ' + JSON.stringify(json.error));
-        }
-      } catch (err) {
-        alert('Failed to create package: ' + err.message);
-      }
-    }
-
-    async function disconnectClient(username, clientIp, nasIp) {
-      if (!confirm(`Disconnect client ${username} (${clientIp})?`)) return;
-      try {
-        await fetch('/api/sessions/disconnect', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, clientIp, nasIp }),
-        });
-        alert('Disconnect-Request (PoD) sent to router port 3799');
-        loadSessions();
-      } catch (err) {
-        alert('Disconnect failed');
-      }
-    }
-
     // Auto-load initial data
+    loadMetrics();
     loadRouters();
     loadPlans();
     loadSessions();
+    loadVouchers();
     updateLiveScript();
+
+    // Auto-refresh metrics every 30 seconds
+    setInterval(loadMetrics, 30000);
   </script>
 </body>
 </html>

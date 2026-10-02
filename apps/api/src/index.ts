@@ -9,6 +9,8 @@ import { healthRoutes } from './routes/health.js';
 import { planRoutes } from './routes/plans.js';
 import { routerRoutes } from './routes/routers.js';
 import { sessionRoutes } from './routes/sessions.js';
+import { metricsRoutes } from './routes/metrics.js';
+import { voucherRoutes } from './routes/vouchers.js';
 
 dotenv.config();
 
@@ -49,6 +51,8 @@ export async function buildApp() {
   await fastify.register(planRoutes, { prefix: '/api' });
   await fastify.register(routerRoutes, { prefix: '/api' });
   await fastify.register(sessionRoutes, { prefix: '/api' });
+  await fastify.register(metricsRoutes, { prefix: '/api' });
+  await fastify.register(voucherRoutes, { prefix: '/api' });
   await fastify.register(healthRoutes); // root /health and /ready fallback
 
   return fastify;

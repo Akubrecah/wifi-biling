@@ -1014,22 +1014,42 @@
       btn.disabled = true;
       btn.textContent = 'Validating...';
 
+      const clientMac = sessionStorage.getItem('clientMac') || '';
+
       try {
         const res = await fetch('/api/vouchers/redeem', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code }),
-        }).catch(() => null);
+          body: JSON.stringify({ code, macAddress: clientMac }),
+        });
 
-        setTimeout(() => {
+        const data = await res.json();
+        if (!res.ok || !data.success) {
           btn.disabled = false;
           btn.textContent = 'Activate Voucher';
-          switchTab('status');
-        }, 1200);
+          showError(data.error || 'Voucher redemption failed. Please verify code.');
+          return;
+        }
+
+        btn.textContent = 'Activated!';
+        input.value = '';
+
+        // If router login link is present, perform captive portal router login
+        const linkLoginOnly = sessionStorage.getItem('linkLoginOnly');
+        if (linkLoginOnly) {
+          const cleanMac = clientMac.replace(/[:-]/g, '').toUpperCase();
+          window.location.href = `${linkLoginOnly}?username=${encodeURIComponent(cleanMac || code)}&password=${encodeURIComponent(cleanMac || code)}`;
+        } else {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Activate Voucher';
+            switchTab('status');
+          }, 800);
+        }
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Activate Voucher';
-        showError('Voucher redemption failed. Please verify code.');
+        showError('Unable to connect to billing server. Please check your connection.');
       }
     }
 
