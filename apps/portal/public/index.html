@@ -202,6 +202,75 @@
       font-weight: 600;
     }
 
+    .plan-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin: 2px 0 4px;
+    }
+
+    .plan-features {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .plan-feature-item {
+      font-size: 12px;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .plan-feature-item svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 4px 2px 8px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .filter-pill:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .filter-pill.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+    }
+
     .btn {
       width: 100%;
       padding: 12px;
@@ -479,96 +548,268 @@
 
     <!-- View: Plans Selection -->
     <div id="view-plans" class="view active">
+      <!-- Quick Category Filter Bar -->
+      <div class="filter-bar">
+        <button class="filter-pill active" onclick="filterPackages('all', this)">All Packages (11)</button>
+        <button class="filter-pill" onclick="filterPackages('starter', this)">🔥 5 - 30 Bob</button>
+        <button class="filter-pill" onclick="filterPackages('daily', this)">⚡ 24h &amp; Weekend</button>
+        <button class="filter-pill" onclick="filterPackages('longterm', this)">🏆 Weekly &amp; Monthly</button>
+        <button class="filter-pill" onclick="filterPackages('boosters', this)">📦 Data Boosters</button>
+      </div>
+
       <div id="plansContainer" style="display: flex; flex-direction: column; gap: 12px;">
-      <!-- 1 Hour Plan -->
-      <div class="plan-card">
-        <div class="plan-header">
-          <div>
-            <div class="plan-name">1 Hour FastPass</div>
-            <div class="plan-badges">
-              <span class="badge highlight">5 Mbps Speed</span>
-              <span class="badge">Unlimited Data</span>
-              <span class="badge">1 Device</span>
+        <!-- 1. 45 Mins QuickBrowse (5 Bob) -->
+        <div class="plan-card" data-category="starter" style="border: 2px solid #10B981; background: linear-gradient(180deg, #FFFFFF 0%, #ECFDF5 100%);">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">45 Mins QuickBrowse</div>
+                <span class="badge" style="background:#10B981; color:#FFFFFF; font-weight:700;">🔥 5 BOB FLASH</span>
+              </div>
+              <p class="plan-desc">Lowest price in town! Instant WhatsApp, X &amp; quick M-Pesa transactions.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 3 Mbps Speed</span>
+                <span class="badge">⏱️ 45 Minutes</span>
+                <span class="badge">📱 1 Device</span>
+                <span class="badge">Unlimited Data</span>
+              </div>
             </div>
+            <div class="plan-price" style="color: #059669;">KES 5</div>
           </div>
-          <div class="plan-price">KES 20</div>
+          <button class="btn btn-primary" onclick="openPaymentModal('45 Mins QuickBrowse', 5, 'plan-5bob')">
+            ⚡ Pay KES 5 with M-Pesa
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="openPaymentModal('1 Hour FastPass', 20, 'plan-1hr')">
-          Select & Pay M-Pesa
-        </button>
-      </div>
 
-      <!-- 3 Hours Plan -->
-      <div class="plan-card">
-        <div class="plan-header">
-          <div>
-            <div class="plan-name">3 Hours Unlimited</div>
-            <div class="plan-badges">
-              <span class="badge highlight">5 Mbps Speed</span>
-              <span class="badge">Unlimited Data</span>
-              <span class="badge">1 Device</span>
+        <!-- 2. 2 Hours SuperSaver (10 Bob) -->
+        <div class="plan-card" data-category="starter" style="border: 2px solid #3B82F6; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">2 Hours SuperSaver</div>
+                <span class="badge" style="background:#3B82F6; color:#FFFFFF; font-weight:700;">⚡ MOST POPULAR</span>
+              </div>
+              <p class="plan-desc">Smooth TikTok reels, Instagram &amp; YouTube 720p HD streaming.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 5 Mbps Speed</span>
+                <span class="badge">⏱️ 2 Hours</span>
+                <span class="badge">📱 1 Device</span>
+                <span class="badge">Unlimited Data</span>
+              </div>
             </div>
+            <div class="plan-price" style="color: #2563EB;">KES 10</div>
           </div>
-          <div class="plan-price">KES 50</div>
+          <button class="btn btn-primary" style="background: #2563EB;" onclick="openPaymentModal('2 Hours SuperSaver', 10, 'plan-10bob')">
+            ⚡ Pay KES 10 with M-Pesa
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="openPaymentModal('3 Hours Unlimited', 50, 'plan-3hr')">
-          Select & Pay M-Pesa
-        </button>
-      </div>
 
-      <!-- 24 Hours Plan -->
-      <div class="plan-card">
-        <div class="plan-header">
-          <div>
-            <div class="plan-name">24 Hours Pass</div>
-            <div class="plan-badges">
-              <span class="badge highlight">10 Mbps Speed</span>
-              <span class="badge">Uncapped</span>
-              <span class="badge">1 Device</span>
+        <!-- 3. 6 Hours Half-Day Hustle (20 Bob) -->
+        <div class="plan-card" data-category="starter">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">6 Hours Half-Day</div>
+                <span class="badge" style="background:#0EA5E9; color:#FFFFFF; font-weight:700;">💼 WORK &amp; STUDY</span>
+              </div>
+              <p class="plan-desc">Afternoon hustle pass. Uninterrupted Zoom calls, assignments &amp; study.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 6 Mbps Speed</span>
+                <span class="badge">⏱️ 6 Hours</span>
+                <span class="badge">📱 1 Device</span>
+                <span class="badge">Zero Throttling</span>
+              </div>
             </div>
+            <div class="plan-price">KES 20</div>
           </div>
-          <div class="plan-price">KES 100</div>
+          <button class="btn btn-primary" onclick="openPaymentModal('6 Hours Half-Day', 20, 'plan-20bob')">
+            ⚡ Pay KES 20 with M-Pesa
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="openPaymentModal('24 Hours Pass', 100, 'plan-24hr')">
-          Select & Pay M-Pesa
-        </button>
-      </div>
 
-      <!-- 7 Days Plan -->
-      <div class="plan-card">
-        <div class="plan-header">
-          <div>
-            <div class="plan-name">7 Days Weekly Pass</div>
-            <div class="plan-badges">
-              <span class="badge highlight">10 Mbps Speed</span>
-              <span class="badge">Uncapped</span>
-              <span class="badge">2 Devices</span>
+        <!-- 4. 12 Hours Day Pass (30 Bob) -->
+        <div class="plan-card" data-category="starter">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">12 Hours Day Pass</div>
+                <span class="badge" style="background:#6366F1; color:#FFFFFF; font-weight:700;">☀️ 12-HR ALL-DAY</span>
+              </div>
+              <p class="plan-desc">Morning to evening full day continuous power pass. Fast downloads &amp; HD video.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 8 Mbps Speed</span>
+                <span class="badge">⏱️ 12 Hours</span>
+                <span class="badge">📱 1 Device</span>
+                <span class="badge">Uncapped</span>
+              </div>
             </div>
+            <div class="plan-price">KES 30</div>
           </div>
-          <div class="plan-price">KES 500</div>
+          <button class="btn btn-primary" onclick="openPaymentModal('12 Hours Day Pass', 30, 'plan-30bob')">
+            ⚡ Pay KES 30 with M-Pesa
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="openPaymentModal('7 Days Weekly Pass', 500, 'plan-7d')">
-          Select & Pay M-Pesa
-        </button>
-      </div>
 
-      <!-- 5GB Data Plan -->
-      <div class="plan-card">
-        <div class="plan-header">
-          <div>
-            <div class="plan-name">5GB High-Speed Data</div>
-            <div class="plan-badges">
-              <span class="badge highlight">10 Mbps Speed</span>
-              <span class="badge">Valid 7 Days</span>
-              <span class="badge">1 Device</span>
+        <!-- 5. 24 Hours Full Day (50 Bob) -->
+        <div class="plan-card" data-category="daily" style="border: 2px solid #8B5CF6; background: linear-gradient(180deg, #FFFFFF 0%, #F5F3FF 100%);">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">24 Hours Full Day</div>
+                <span class="badge" style="background:#8B5CF6; color:#FFFFFF; font-weight:700;">👑 BEST VALUE</span>
+              </div>
+              <p class="plan-desc">Round-the-clock 24h unlimited power pass. Non-stop downloads &amp; full 1080p movies.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 10 Mbps Ultra</span>
+                <span class="badge">⏱️ Full 24 Hours</span>
+                <span class="badge">📱 1 Device</span>
+                <span class="badge">Unlimited 24/7</span>
+              </div>
             </div>
+            <div class="plan-price" style="color: #7C3AED;">KES 50</div>
           </div>
-          <div class="plan-price">KES 100</div>
+          <button class="btn btn-primary" style="background: #7C3AED;" onclick="openPaymentModal('24 Hours Full Day', 50, 'plan-24hr')">
+            ⚡ Pay KES 50 with M-Pesa
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="openPaymentModal('5GB High-Speed Data', 100, 'plan-5gb')">
-          Select & Pay M-Pesa
-        </button>
-      </div>
+
+        <!-- 6. 3 Days Weekend Pass (100 Bob) -->
+        <div class="plan-card" data-category="daily">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">3 Days Weekend Pass</div>
+                <span class="badge" style="background:#EC4899; color:#FFFFFF; font-weight:700;">🍿 WEEKEND BINGE</span>
+              </div>
+              <p class="plan-desc">Friday to Sunday unlimited movie binge, Premier League football &amp; gaming.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 10 Mbps Speed</span>
+                <span class="badge">⏱️ 72 Hours (3 Days)</span>
+                <span class="badge">📱 1 Device</span>
+                <span class="badge">Unlimited Data</span>
+              </div>
+            </div>
+            <div class="plan-price">KES 100</div>
+          </div>
+          <button class="btn btn-primary" onclick="openPaymentModal('3 Days Weekend Pass', 100, 'plan-3d')">
+            ⚡ Pay KES 100 with M-Pesa
+          </button>
+        </div>
+
+        <!-- 7. 7 Days Weekly Pass (200 Bob) -->
+        <div class="plan-card" data-category="longterm" style="border: 2px solid #059669; background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">7 Days Weekly Pass</div>
+                <span class="badge" style="background:#059669; color:#FFFFFF; font-weight:700;">🚀 WEEKLY VIP</span>
+              </div>
+              <p class="plan-desc">Dual-device freedom. Connect Phone + Laptop together for a full week without data anxiety!</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 12 Mbps Turbo</span>
+                <span class="badge">⏱️ 7 Full Days</span>
+                <span class="badge">📱💻 2 Devices</span>
+                <span class="badge">Zero Throttling</span>
+              </div>
+            </div>
+            <div class="plan-price" style="color: #059669;">KES 200</div>
+          </div>
+          <button class="btn btn-primary" style="background: #059669;" onclick="openPaymentModal('7 Days Weekly Pass', 200, 'plan-7d')">
+            ⚡ Pay KES 200 with M-Pesa
+          </button>
+        </div>
+
+        <!-- 8. 14 Days Bi-Weekly Pro (350 Bob) -->
+        <div class="plan-card" data-category="longterm">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">14 Days Bi-Weekly Pro</div>
+                <span class="badge" style="background:#4F46E5; color:#FFFFFF; font-weight:700;">💎 2-WEEK PRO</span>
+              </div>
+              <p class="plan-desc">Two weeks uninterrupted dual-device connectivity. Ideal for remote workers and students.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 12 Mbps Speed</span>
+                <span class="badge">⏱️ 14 Days</span>
+                <span class="badge">📱💻 2 Devices</span>
+                <span class="badge">Priority Bandwidth</span>
+              </div>
+            </div>
+            <div class="plan-price">KES 350</div>
+          </div>
+          <button class="btn btn-primary" onclick="openPaymentModal('14 Days Bi-Weekly Pro', 350, 'plan-14d')">
+            ⚡ Pay KES 350 with M-Pesa
+          </button>
+        </div>
+
+        <!-- 9. 30 Days Monthly Pass (600 Bob) -->
+        <div class="plan-card" data-category="longterm" style="border: 2px solid #F59E0B; background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">30 Days Monthly Pass</div>
+                <span class="badge" style="background:#F59E0B; color:#FFFFFF; font-weight:700;">🏆 RESIDENTIAL VIP</span>
+              </div>
+              <p class="plan-desc">Ultimate home pass! Connect Phone + Laptop + Smart TV. 10x cheaper than cellular data bundles!</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 15 Mbps Turbo</span>
+                <span class="badge">⏱️ 30 Full Days</span>
+                <span class="badge">📱💻📺 3 Devices</span>
+                <span class="badge">VIP Unlimited</span>
+              </div>
+            </div>
+            <div class="plan-price" style="color: #D97706;">KES 600</div>
+          </div>
+          <button class="btn btn-primary" style="background:#D97706;" onclick="openPaymentModal('30 Days Monthly Pass', 600, 'plan-30d')">
+            ⚡ Pay KES 600 with M-Pesa
+          </button>
+        </div>
+
+        <!-- 10. 5GB High-Speed Booster (50 Bob) -->
+        <div class="plan-card" data-category="boosters">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">5GB High-Speed Booster</div>
+                <span class="badge" style="background:#14B8A6; color:#FFFFFF; font-weight:700;">📦 5GB DATA PASS</span>
+              </div>
+              <p class="plan-desc">Pure 15 Mbps high-speed quota without hourly expiration. Valid 7 days.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 15 Mbps Turbo</span>
+                <span class="badge">📦 5GB Quota</span>
+                <span class="badge">⏱️ Valid 7 Days</span>
+                <span class="badge">📱 1 Device</span>
+              </div>
+            </div>
+            <div class="plan-price">KES 50</div>
+          </div>
+          <button class="btn btn-primary" onclick="openPaymentModal('5GB High-Speed Booster', 50, 'plan-5gb')">
+            ⚡ Pay KES 50 with M-Pesa
+          </button>
+        </div>
+
+        <!-- 11. 20GB Mega Download Pass (150 Bob) -->
+        <div class="plan-card" data-category="boosters">
+          <div class="plan-header">
+            <div>
+              <div style="display:flex; align-items:center; gap: 8px;">
+                <div class="plan-name">20GB Mega Download Pass</div>
+                <span class="badge" style="background:#6366F1; color:#FFFFFF; font-weight:700;">⚡ 20GB MEGA PASS</span>
+              </div>
+              <p class="plan-desc">Massive 20GB bandwidth at 20 Mbps ultra speed for large game downloads, OS updates &amp; backups.</p>
+              <div class="plan-badges">
+                <span class="badge highlight">⚡ 20 Mbps Ultra</span>
+                <span class="badge">📦 20GB Quota</span>
+                <span class="badge">⏱️ Valid 30 Days</span>
+                <span class="badge">📱💻 2 Devices</span>
+              </div>
+            </div>
+            <div class="plan-price">KES 150</div>
+          </div>
+          <button class="btn btn-primary" onclick="openPaymentModal('20GB Mega Download Pass', 150, 'plan-20gb')">
+            ⚡ Pay KES 150 with M-Pesa
+          </button>
+        </div>
       </div>
     </div>
 
@@ -838,6 +1079,22 @@
       if (clientIp) sessionStorage.setItem('clientIp', clientIp);
     }
 
+    // Filter packages by category
+    function filterPackages(category, element) {
+      document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+      if (element) element.classList.add('active');
+
+      const cards = document.querySelectorAll('#plansContainer .plan-card');
+      cards.forEach(card => {
+        const cardCategory = card.getAttribute('data-category');
+        if (category === 'all' || cardCategory === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
     // Dynamically load active plans from API
     async function loadPlans() {
       try {
@@ -846,24 +1103,89 @@
         if (json.success && json.data && json.data.length > 0) {
           const container = document.getElementById('plansContainer');
           if (!container) return;
-          container.innerHTML = json.data.map(plan => `
-            <div class="plan-card">
+
+          container.innerHTML = json.data.map(plan => {
+            let promoBadge = '';
+            let cardStyle = '';
+            let btnStyle = '';
+            let priceColor = 'var(--primary)';
+            let category = 'starter';
+
+            if (plan.planType === 'HYBRID' || plan.dataLimitBytes) {
+              category = 'boosters';
+              promoBadge = `<span class="badge" style="background:#14B8A6; color:#FFFFFF; font-weight:700;">📦 DATA PASS</span>`;
+            } else if (plan.price <= 5) {
+              category = 'starter';
+              promoBadge = `<span class="badge" style="background:#10B981; color:#FFFFFF; font-weight:700;">🔥 5 BOB FLASH</span>`;
+              cardStyle = `style="border: 2px solid #10B981; background: linear-gradient(180deg, #FFFFFF 0%, #ECFDF5 100%);"`;
+              priceColor = '#059669';
+            } else if (plan.price <= 10) {
+              category = 'starter';
+              promoBadge = `<span class="badge" style="background:#3B82F6; color:#FFFFFF; font-weight:700;">⚡ MOST POPULAR</span>`;
+              cardStyle = `style="border: 2px solid #3B82F6; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);"`;
+              btnStyle = `style="background: #2563EB;"`;
+              priceColor = '#2563EB';
+            } else if (plan.price <= 30) {
+              category = 'starter';
+              promoBadge = `<span class="badge" style="background:#6366F1; color:#FFFFFF; font-weight:700;">💼 WORK &amp; STUDY</span>`;
+            } else if (plan.price <= 100) {
+              category = 'daily';
+              promoBadge = plan.price <= 50 
+                ? `<span class="badge" style="background:#8B5CF6; color:#FFFFFF; font-weight:700;">👑 BEST VALUE</span>`
+                : `<span class="badge" style="background:#EC4899; color:#FFFFFF; font-weight:700;">🍿 WEEKEND BINGE</span>`;
+              if (plan.price <= 50) {
+                cardStyle = `style="border: 2px solid #8B5CF6; background: linear-gradient(180deg, #FFFFFF 0%, #F5F3FF 100%);"`;
+                btnStyle = `style="background: #7C3AED;"`;
+                priceColor = '#7C3AED';
+              }
+            } else if (plan.price < 500) {
+              category = 'longterm';
+              promoBadge = `<span class="badge" style="background:#059669; color:#FFFFFF; font-weight:700;">🚀 WEEKLY VIP</span>`;
+              cardStyle = `style="border: 2px solid #059669; background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);"`;
+              btnStyle = `style="background: #059669;"`;
+              priceColor = '#059669';
+            } else {
+              category = 'longterm';
+              promoBadge = `<span class="badge" style="background:#F59E0B; color:#FFFFFF; font-weight:700;">🏆 RESIDENTIAL VIP</span>`;
+              cardStyle = `style="border: 2px solid #F59E0B; background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);"`;
+              btnStyle = `style="background: #D97706;"`;
+              priceColor = '#D97706';
+            }
+
+            let validityText = '';
+            if (plan.durationSec) {
+              const hours = Math.round(plan.durationSec / 3600);
+              if (hours < 1) validityText = `${Math.round(plan.durationSec / 60)} Mins`;
+              else if (hours < 24) validityText = `${hours} Hours`;
+              else validityText = `${Math.round(hours / 24)} Days`;
+            } else {
+              validityText = 'Flexible';
+            }
+
+            return `
+            <div class="plan-card" data-category="${category}" ${cardStyle}>
               <div class="plan-header">
                 <div>
-                  <div class="plan-name">${plan.name}</div>
+                  <div style="display:flex; align-items:center; gap: 8px;">
+                    <div class="plan-name">${plan.name}</div>
+                    ${promoBadge}
+                  </div>
+                  <p class="plan-desc">${plan.description || 'High-speed uncapped internet connectivity.'}</p>
                   <div class="plan-badges">
-                    <span class="badge highlight">${Math.round(plan.downloadSpeed / 1024)} Mbps Speed</span>
-                    <span class="badge">${plan.planType === 'TIME_BASED' ? 'Unlimited Data' : (plan.dataLimitBytes ? (Math.round(Number(plan.dataLimitBytes) / (1024 * 1024 * 1024)) + 'GB Data') : 'Data Quota')}</span>
-                    <span class="badge">${plan.maxDevices || 1} Device${(plan.maxDevices || 1) > 1 ? 's' : ''}</span>
+                    <span class="badge highlight">⚡ ${Math.round(plan.downloadSpeed / 1024)} Mbps Speed</span>
+                    <span class="badge">⏱️ ${validityText}</span>
+                    <span class="badge">📱 ${plan.maxDevices || 1} Device${(plan.maxDevices || 1) > 1 ? 's' : ''}</span>
+                    <span class="badge">${plan.planType === 'TIME_BASED' ? 'Unlimited Data' : (plan.dataLimitBytes ? (Math.round(Number(plan.dataLimitBytes) / (1024 * 1024 * 1024)) + 'GB Quota') : 'Data Quota')}</span>
                   </div>
                 </div>
-                <div class="plan-price">${plan.currency} ${plan.price}</div>
+                <div class="plan-price" style="color: ${priceColor};">${plan.currency} ${plan.price}</div>
               </div>
-              <button class="btn btn-primary" onclick="openPaymentModal('${plan.name}', ${plan.price}, '${plan.id}')">
-                Select & Pay M-Pesa
+              <button class="btn btn-primary" ${btnStyle} onclick="openPaymentModal('${plan.name}', ${plan.price}, '${plan.id}')">
+                ⚡ Pay KES ${plan.price} with M-Pesa
               </button>
             </div>
-          `).join('');
+            `;
+          }).join('');
         }
       } catch (e) {
         console.warn('Could not load dynamic plans, fallback active', e);
